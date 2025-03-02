@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemini Search</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Gemini Search</h1>
+    <input type="text" id="search_input">
+    <button id="search_button">Search</button>
+    <div id="result_container"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#search_button').click(function() {
+                var searchQuery = $('#search_input').val();
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/gemini-search/search/', true);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        // Success, but we're handling the stream in onreadystatechange
+                    } else {
+                        $('#result_container').html('<p style="color:red;">An error occurred: ' + xhr.statusText + '</p>');
+                    }
+                };
+                xhr.onerror = function() {
+                    $('#result_container').html('<p style="color:red;">Network error occurred.</p>');
+                };
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 3) { // Receiving response
+                        try {
+                            var chunk = JSON.parse(xhr.responseText.substring(xhr.lastChunkIndex || 0));
+                            xhr.lastChunkIndex = xhr.responseText.length;
+                            console.log("Chunk received:", chunk);
+                            if (chunk && chunk.chunk) {
+                                $('#result_container').append(chunk.chunk);
+                            }
+                        } catch (e) {
+                            console.error("Error parsing chunk:", e);
+                        }
+                    }
+                };
+                xhr.send('search_query=' + encodeURIComponent(searchQuery) + '&csrfmiddlewaretoken=' + encodeURIComponent('{{ csrf_token }}'));
+                $('#result_container').html(''); // Clear previous results
+            });
+        });
+    </script>
+    {% csrf_token %}
+</body>
+</html>
