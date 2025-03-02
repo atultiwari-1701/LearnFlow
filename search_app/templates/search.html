@@ -3,47 +3,80 @@
 <head>
     <title>Gemini Search</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: gray;
+        }
+    </style>
 </head>
 <body>
     <h1>Gemini Search</h1>
     <input type="text" id="search_input">
     <button id="search_button">Search</button>
     <div id="result_container"></div>
+    <div id="loading_indicator" class="loading" style="display: none;">Loading...</div>
 
     <script>
         $(document).ready(function() {
             $('#search_button').click(function() {
                 var searchQuery = $('#search_input').val();
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', '/gemini-search/search/', true);
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                xhr.onload = function() {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        // Success, but we're handling the stream in onreadystatechange
-                    } else {
-                        $('#result_container').html('<p style="color:red;">An error occurred: ' + xhr.statusText + '</p>');
+                $.ajax({
+                    url: '/gemini-search/search/',
+                    type: 'POST',
+                    data: { 'search_query': searchQuery, 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+                    dataType: 'json',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    beforeSend: function() {
+                        $('#result_container').html('');
+                        $('#loading_indicator').show();
+                    },
+                    success: function(response) {
+    $('#loading_indicator').hide();
+    console.log("Full response:", response);
+    if (response.result) {
+        try {
+            // Attempt to fix the JSON string (if needed)
+            var fixedJsonString = response.result.replace(/,\s*}/g, '}'); // Remove trailing commas
+            fixedJsonString = fixedJsonString.replace(/,\s*\]/g, ']'); // Remove trailing commas in arrays
+            var innerJson = JSON.parse(response.result);
+
+            // Accessing keys dynamically
+            var shortDescription = innerJson[0]["Short Description"]["Description"];
+            var needToLearnKey = "Need to Learn " + searchQuery;
+            var needToLearn = innerJson[0][needToLearnKey]["Description"];
+            var subTopicsKey = "SubTopics of " + searchQuery;
+            var subTopics = innerJson[0][subTopicsKey]["Description"];
+            var roadMapKey = "Road Map to Learn " + searchQuery;
+            var roadMap = innerJson[0][roadMapKey]["Description"];
+            var resourceTabsKey = "Resource Tab Suggestions for " + searchQuery;
+            var resourceTabs = innerJson[0][resourceTabsKey]["Description"];
+            var keyTakeaways = innerJson[0]["Key Takeaways"]["Description"];
+            var frequentlyAsked = innerJson[0]["Frequently Asked Questions"]["Description"];
+            var relatedTopics = innerJson[0]["Related Topics"]["Description"];
+
+            // Now you can use these variables to populate your HTML
+            console.log("Short Description:", shortDescription);
+            console.log("Need to Learn:", needToLearn);
+            // ... and so on ...
+
+            // Display the parsed JSON object
+            $('#result_container').html('<pre>' + JSON.stringify(innerJson, null, 2) + '</pre>');
+
+        } catch (e) {
+            $('#result_container').html('<p style="color:red;">Error parsing JSON: ' + e + '</p>');
+        }
+    } else if (response.error) {
+        $('#result_container').html('<p style="color:red;">' + response.error + '</p>');
+    }
+},
+                    error: function(xhr, status, error) {
+                        console.log("AJAX Error:", xhr, status, error);
+                        $('#loading_indicator').hide();
+                        $('#result_container').html('<p style="color:red;">An error occurred: ' + error + '</p>');
                     }
-                };
-                xhr.onerror = function() {
-                    $('#result_container').html('<p style="color:red;">Network error occurred.</p>');
-                };
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 3) { // Receiving response
-                        try {
-                            var chunk = JSON.parse(xhr.responseText.substring(xhr.lastChunkIndex || 0));
-                            xhr.lastChunkIndex = xhr.responseText.length;
-                            console.log("Chunk received:", chunk);
-                            if (chunk && chunk.chunk) {
-                                $('#result_container').append(chunk.chunk);
-                            }
-                        } catch (e) {
-                            console.error("Error parsing chunk:", e);
-                        }
-                    }
-                };
-                xhr.send('search_query=' + encodeURIComponent(searchQuery) + '&csrfmiddlewaretoken=' + encodeURIComponent('{{ csrf_token }}'));
-                $('#result_container').html(''); // Clear previous results
+                });
             });
         });
     </script>
