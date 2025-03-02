@@ -3,14 +3,14 @@ import os
 import json
 import traceback
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse, StreamingHttpResponse, HttpResponseServerError
+from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from google import genai
 from google.genai import types
 import logging
 
 # Configure logging (optional, for debugging)
-logging.basicConfig(level=logging.DEBUG)  # Set the logging level
+logging.basicConfig(level=logging.DEBUG)
 
 def generate_prompt(topic):
     prompt_template = """
@@ -50,17 +50,17 @@ def generate_prompt(topic):
     """
     return prompt_template.replace("{topic}", topic)
 
-
-
 def search_gemini(request):
+    print("search_gemini called")
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        print("it is a post request")
         topic_name = request.POST.get('search_query', '')
+        print(f"topic_name: {topic_name}")
         if topic_name:
             try:
                 client = genai.Client(api_key=settings.GEMINI_API_KEY)
-
                 model = "gemini-2.0-pro-exp-02-05"
-                prompt = generate_prompt(topic_name) # Generate a prompt based on the topic name
+                prompt = generate_prompt(topic_name)
                 contents = [
                     types.Content(
                         role="user",
@@ -76,27 +76,26 @@ def search_gemini(request):
                     top_p=0.95,
                     top_k=64,
                     max_output_tokens=8192,
-                    tools=[types.Tool(google_search=types.GoogleSearch())],
-                    response_mime_type="text/plain",
+                    response_mime_type="application/json",
                 )
 
-                def generate_chunks():
-                    for chunk in client.models.generate_content_stream(
-                        model=model,
-                        contents=contents,
-                        config=generate_content_config,
-                    ):
-                        yield json.dumps({'chunk': chunk.text}) + '\n' #add newline character.
+                response = client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=generate_content_config,
+                )
 
-                return StreamingHttpResponse(generate_chunks(), content_type='application/json')
+                print("Gemini API call successful")
+                return JsonResponse({'result': response.text})
 
             except Exception as e:
+                print(f"Error: {e}")
                 traceback.print_exc()
                 return JsonResponse({'error': str(e)}, status=500)
-
         else:
+            print("Search query empty")
             return JsonResponse({'error': 'Search query is empty.'}, status=400)
-
+    print("search page rendered")
     return render(request, 'search.html')
 
 def test(request):
