@@ -52,42 +52,42 @@ Output a single valid JSON object containing:
 
 {
     "Short Description": {
-        "Description": "Write a concise description between 70 and 100 words, using a friendly and conversational tone that encourages beginners. Highlight key points using **bold** text."
+        "Description": "Write a concise description between 70 and 100 words, using a friendly and conversational tone that encourages beginners. Highlight key points using **bold** text. **Example for 'Python':** **Python** is a versatile language known for its readability. It's used in web development, data science, and more." 
     },
     "Need to Learn {topic-name}": {
-        "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone."
+        "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone. **Example for 'Python':** Learning Python opens doors to exciting career opportunities and empowers you to build innovative applications."
     },
     "SubTopics of {topic-name}": {
         "Description": {
             "subtopics": [
                 {
                     "name": "Subtopic Name 1",
-                    "description": "20-30 word description.",
-                    "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery",
-                    "timeToComplete": "e.g., 2 hours",
-                    "whyItMatters": "20-30 word explanation.",
+                    "description": "20-30 word description. **Example for 'Python Variables':** Understanding how to store and manipulate data.",
+                    "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery. **Example for 'Python Variables':** Beginner",
+                    "timeToComplete": "e.g., 2 hours. **Example for 'Python Variables':** 2 hours",
+                    "whyItMatters": "20-30 word explanation. **Example for 'Python Variables':** Fundamental for all Python programming tasks.",
                     "commonMistakes": [
-                        "Mistake 1",
-                        "Mistake 2",
-                        "Mistake 3"
+                        "**Example for 'Python Variables':** Using incorrect data types.",
+                        "**Example for 'Python Variables':** Not understanding variable scope.",
+                        "**Example for 'Python Variables':** Naming variables poorly."
                     ],
                     "resourceTabs": [
-                        "Articles", "Videos", "News", "Interactive"
+                        'resourceTabs' JSON array object containing three resource tab names (e.g., 'Articles', 'Videos', 'News', 'Interactive','Courses') to indicate the types of resources available for this subtopic. Do not include website links or descriptions.
                     ]
                 },
                 {
                     "name": "Subtopic Name 2",
-                    "description": "20-30 word description.",
-                    "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery",
-                    "timeToComplete": "e.g., 2 hours",
-                    "whyItMatters": "20-30 word explanation.",
+                    "description": "20-30 word description. **Example for 'Python Loops':** Learning to control program flow.",
+                    "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery. **Example for 'Python Loops':** Intermediate",
+                    "timeToComplete": "e.g., 2 hours. **Example for 'Python Loops':** 3 hours",
+                    "whyItMatters": "20-30 word explanation. **Example for 'Python Loops':** Enables you to write efficient code.",
                     "commonMistakes": [
-                        "Mistake 1",
-                        "Mistake 2",
-                        "Mistake 3"
+                        "**Example for 'Python Loops':** Incorrect loop conditions.",
+                        "**Example for 'Python Loops':** Not handling edge cases.",
+                        "**Example for 'Python Loops':** Using infinite loops."
                     ],
                     "resourceTabs": [
-                        "Articles", "Videos", "News", "Interactive"
+                        'resourceTabs' JSON array object containing three resource tab names (e.g., 'Articles', 'Videos', 'News', 'Interactive','Courses') to indicate the types of resources available for this subtopic. Do not include website links or descriptions.
                     ]
                 },
                 // Add more subtopics as needed
@@ -97,54 +97,48 @@ Output a single valid JSON object containing:
     "Road Map to Learn {topic-name}": {
         "Description": {
             "prerequisites": {
-                "description": "Prerequisite information."
+                "description": "Prerequisite information. **Example for 'Python':** Basic computer literacy."
             },
             "levels": [
                 {
                     "name": "Basic Level",
                     "topics": [
-                        "Topic 1",
-                        "Topic 2",
-                        "Topic 3"
+                        "**Example for 'Python':** Setting up Python environment.",
+                        "**Example for 'Python':** Basic syntax.",
+                        "**Example for 'Python':** Simple programs."
                     ],
-                    "howToConquer": "Actionable advice.",
-                    "insiderTips": "50-word tips."
+                    "howToConquer": "Actionable advice. **Example for 'Python':** Practice coding exercises.",
+                    "insiderTips": "50-word tips. **Example for 'Python':** Join online communities."
                 },
                 {
                     "name": "Intermediate Level",
                     "topics": [
-                        "Topic 1",
-                        "Topic 2",
-                        "Topic 3"
+                        "**Example for 'Python':** Object-oriented programming.",
+                        "**Example for 'Python':** Working with APIs.",
+                        "**Example for 'Python':** Web applications."
                     ],
-                    "howToConquer": "Actionable advice.",
-                    "insiderTips": "50-word tips."
+                    "howToConquer": "Actionable advice. **Example for 'Python':** Build personal projects.",
+                    "insiderTips": "50-word tips. **Example for 'Python':** Focus on readability."
                 },
                 // Add more levels as needed
             ]
         }
     },
     "Resource Tab Suggestions for {topic-name}": {
-        "Description": ["Articles", "Videos", "Tutorials", "Courses"]
+        "Description": "Provide 3 resource tab name suggestions that would be most helpful for learning {topic-name}. **Example for 'Python':** ['Tutorials', 'Videos', 'Documentation']"
     },
     "Key Takeaways": {
-        "Description": [
-            "Takeaway 1",
-            "Takeaway 2",
-            "Takeaway 3",
-            "Takeaway 4",
-            "Takeaway 5"
-        ]
+        "Description": "A JSON array containing 3-5 concise, impactful takeaways that summarize the most important points of learning {topic-name}. Each takeaway should be a short, direct statement. **Example for 'Python':** ['Python is versatile and beginner-friendly.', 'Practice is essential to mastering Python.', 'Python has a rich ecosystem of libraries.', 'Python is used in web development, data science, and automation.', 'Python promotes code readability and maintainability.']"
     },
     "Frequently Asked Questions": {
         "Description": [
             {
-                "question": "Question 1",
-                "answer": "Answer 1"
+                "question": "Example for 'Python': What is Python used for?",
+                "answer": "Example for 'Python': Web development."
             },
             {
-                "question": "Question 2",
-                "answer": "Answer 2"
+                "question": "Example for 'Python': How to install Python?",
+                "answer": "Example for 'Python': Download from website."
             },
             // Add more FAQs as needed
         ]
@@ -152,12 +146,12 @@ Output a single valid JSON object containing:
     "Related Topics": {
         "Description": [
             {
-                "topic": "Topic 1",
-                "description": "Description 1"
+                "topic": "Example for 'Python': Web Development",
+                "description": "Example for 'Python': Building websites."
             },
             {
-                "topic": "Topic 2",
-                "description": "Description 2"
+                "topic": "Example for 'Python': Data Science",
+                "description": "Example for 'Python': Analyzing data."
             },
             // Add more related topics as needed
         ]
