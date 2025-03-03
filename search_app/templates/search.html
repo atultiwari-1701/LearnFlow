@@ -37,27 +37,25 @@
                 console.log("Full response:", response);
                 if (response && response.result) {
                     try {
-                        // Parse the JSON string
-                        var innerJson = JSON.parse(response.result);
-
-                        console.log("Parsed JSON:", innerJson); // Inspect the JSON object
-
+                        console.log("Response Result String:", response.result); // Log the raw JSON string
                         const parsedResponse = JSON.parse(response.result); // Parse JSON
-                        const data = parsedResponse[0]; // Extract the first object
+                        console.log("Parsed Response:", parsedResponse); // Log the parsed object
+                        const data = parsedResponse; // Extract the object
 
                         console.log("Short Description:", data["Short Description"]);
-                        console.log("Need to Learn:", data["Need to Learn dancing"]);
-                        console.log("Subtopics:", data["SubTopics of dancing"]);
-                        console.log("Roadmap:", data["Road Map to Learn dancing"]);
-                        console.log("Resource Tabs:", data["Resource Tab Suggestions for dancing"]);
+                        console.log("Need to Learn:", data["Need to Learn " + searchQuery]);
+                        console.log("Subtopics:", data["SubTopics of " + searchQuery]);
+                        console.log("Roadmap:", data["Road Map to Learn " + searchQuery]);
+                        console.log("Resource Tabs:", data["Resource Tab Suggestions for " + searchQuery]);
                         console.log("Key Takeaways:", data["Key Takeaways"]);
                         console.log("FAQ:", data["Frequently Asked Questions"]);
                         console.log("Related Topics:", data["Related Topics"]);
 
                         // Display the parsed JSON object
-                        $('#result_container').html('<pre>' + JSON.stringify(innerJson, null, 2) + '</pre>');
+                        $('#result_container').html('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
 
                     } catch (e) {
+                        console.error("Error parsing JSON:", e);
                         $('#result_container').html('<p style="color:red;">Error parsing JSON: ' + e + '</p>');
                     }
                 } else if (response && response.error) {
