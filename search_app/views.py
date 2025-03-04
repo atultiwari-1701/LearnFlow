@@ -73,7 +73,8 @@ Output a single valid JSON object containing:
                         "**Example for 'Python Variables':** Using incorrect data types.",
                         "**Example for 'Python Variables':** Not understanding variable scope.",
                         "**Example for 'Python Variables':** Naming variables poorly."
-                    ]           
+                    ],
+                    resourceTabs: [],          
                 },
                 {
                     "name": "Subtopic Name 2",
@@ -85,7 +86,8 @@ Output a single valid JSON object containing:
                         "**Example for 'Python Loops':** Incorrect loop conditions.",
                         "**Example for 'Python Loops':** Not handling edge cases.",
                         "**Example for 'Python Loops':** Using infinite loops."
-                    ]
+                    ],
+                    resourceTabs: [],          
                 },
                 // Add more subtopics as needed (At least 6 subtopics are required)
             ]
@@ -175,6 +177,23 @@ def search_gemini(request):
             return JsonResponse({'error': 'Search query is empty.'}, status=400)
     print("search page rendered")
     return render(request, 'search.html')
+
+def generate_resources(request):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        subtopic = request.POST.get('subtopic')
+        resource = request.POST.get('resource')
+        search_query = request.POST.get('search_query')
+
+        prompt = f"Generate resources for {resource} in {subtopic} of {search_query}."
+
+        try:
+            response_text = call_gemini_model(prompt)
+            print(response_text) # add this line
+            return JsonResponse({'result': response_text})
+        except Exception as e:
+            print(e) # add this line
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request.'}, status=400)
 
 def test(request):
     return HttpResponse("Simple URL test: This is a test response.")
