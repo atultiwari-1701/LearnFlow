@@ -207,8 +207,10 @@ def generate_youtube_videos(request):
         if prompt:
             try:
                 api_key = settings.YOUTUBE_API_KEY
+                print(api_key)
                 results = search_youtube(api_key, prompt) #search youtube function called
                 if results:
+                    logger.info(results)
                     return JsonResponse({'result': results})
                 else:
                     return JsonResponse({'error': 'YouTube API request failed.'}, status=500)

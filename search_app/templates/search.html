@@ -166,7 +166,7 @@
             if (resourceName === "Videos") {
         // Call YouTube API via Django backend
         $.ajax({
-            url: '/gemini-search/generate-youtube-videos/', // New Django endpoint
+            url: '/gemini-search/generate-youtube-videos/',
             type: 'POST',
             data: {
                 'csrfmiddlewaretoken': '{{ csrf_token }}',
@@ -176,7 +176,33 @@
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
             success: function(response) {
                 if (response && response.result) {
-                    displayResourceResults(response.result, buttonElement, data, subtopicName, searchQuery, resourceName);
+                    const videos = response.result;
+                    console.log("YouTube API response:", videos);
+
+                    // Add YouTube results to data object (same logic as other resources)
+                    let subtopics = data["SubTopics"]["Description"]["subtopics"];
+                    let subtopicObject = subtopics.find(subtopic => subtopic.name === subtopicName);
+
+                    if (subtopicObject && subtopicObject.resourceTabs) {
+                        let resourceTabIndex = subtopicObject.resourceTabs.findIndex(tab => Object.keys(tab)[0] === resourceName);
+                        if (resourceTabIndex !== -1){
+                            subtopicObject.resourceTabs[resourceTabIndex][resourceName] = response.result;
+                        } else {
+                            let newResourceTab = {};
+                            newResourceTab[resourceName] = response.result;
+                            subtopicObject.resourceTabs.push(newResourceTab);
+                        }
+
+                        $('#json_data').text(JSON.stringify(data, null, 2));
+                        $('#result_container pre').text(JSON.stringify(data, null, 2));
+
+                        let resultDiv = $('<div class="resource-result"><pre>' + JSON.stringify(response.result, null, 2) + '</pre></div>');
+                        buttonElement.after(resultDiv);
+                    } else {
+                        console.error("Subtopic object or resourceTabs is undefined.");
+                    }
+
+                    //displayResourceResults(response.result, buttonElement, data, subtopicName, searchQuery, resourceName);
                 } else {
                     console.error("YouTube API error or invalid response:", response);
                     buttonElement.after('<p style="color:red;">Error fetching YouTube videos.</p>');

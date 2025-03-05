@@ -35,6 +35,9 @@ ALLOWED_HOSTS = []
 GEMINI_API_KEY =os.environ.get('GEMINI_API_KEY')
 print(f"GEMINI_API_KEY: {GEMINI_API_KEY}") #Add this line.
 
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
+print(f"YOUTUBE_API_KEY: {YOUTUBE_API_KEY}") #Add this line.
+
 
 # Application definition
 
