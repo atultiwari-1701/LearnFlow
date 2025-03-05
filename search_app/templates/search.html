@@ -50,6 +50,7 @@
                             try {
                                 const parsedData = JSON.parse(response.result);
                                 const data = parsedData[0];
+                                console.log("Data:", data);
                                 displaySearchResults(data, searchQuery); // Call displaySearchResults
                             } catch (e) {
                                 console.error("Error parsing JSON:", e);
@@ -101,47 +102,106 @@
             }
         }
 
+//         function generateResources(subtopicName, resourceName, searchQuery, data, buttonElement) {
+//     $.ajax({
+//         url: '/gemini-search/generate-resources/',
+//         type: 'POST',
+//         data: {
+//             'subtopic': subtopicName,
+//             'resource': resourceName,
+//             'search_query': searchQuery,
+//             'csrfmiddlewaretoken': '{{ csrf_token }}'
+//         },
+//         dataType: 'json',
+//         headers: { 'X-Requested-With': 'XMLHttpRequest' },
+//         success: function(response) {
+//             let subtopics = data["SubTopics of " + searchQuery]["Description"]["subtopics"];
+//             let subtopicObject = subtopics.find(subtopic => subtopic.name === subtopicName);
+
+//             if (subtopicObject && subtopicObject.resourceTabs) {
+//                 // Find the index of the resource tab object if it exists, otherwise create a new object.
+//                 let resourceTabIndex = subtopicObject.resourceTabs.findIndex(tab => Object.keys(tab)[0] === resourceName);
+//                 if (resourceTabIndex !== -1){
+//                     subtopicObject.resourceTabs[resourceTabIndex][resourceName] = response.result;
+//                 } else {
+//                     let newResourceTab = {};
+//                     newResourceTab[resourceName] = response.result;
+//                     subtopicObject.resourceTabs.push(newResourceTab);
+//                 }
+
+//                 $('#json_data').text(JSON.stringify(data, null, 2));
+//                 $('#result_container pre').text(JSON.stringify(data, null, 2));
+
+//                 let resultDiv = $('<div class="resource-result"><pre>' + JSON.stringify(response.result, null, 2) + '</pre></div>');
+//                 buttonElement.after(resultDiv);
+//             } else {
+//                 console.error("Subtopic object or resourceTabs is undefined.");
+//             }
+//         },
+//         error: function(xhr, status, error) {
+//             console.error("Error generating resources:", error);
+//         }
+//     });
+// }
+
         function generateResources(subtopicName, resourceName, searchQuery, data, buttonElement) {
-    $.ajax({
-        url: '/gemini-search/generate-resources/',
-        type: 'POST',
-        data: {
-            'subtopic': subtopicName,
-            'resource': resourceName,
-            'search_query': searchQuery,
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
-        },
-        dataType: 'json',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        success: function(response) {
-            let subtopics = data["SubTopics of " + searchQuery]["Description"]["subtopics"];
-            let subtopicObject = subtopics.find(subtopic => subtopic.name === subtopicName);
 
-            if (subtopicObject && subtopicObject.resourceTabs) {
-                // Find the index of the resource tab object if it exists, otherwise create a new object.
-                let resourceTabIndex = subtopicObject.resourceTabs.findIndex(tab => Object.keys(tab)[0] === resourceName);
-                if (resourceTabIndex !== -1){
-                    subtopicObject.resourceTabs[resourceTabIndex][resourceName] = response.result;
-                } else {
-                    let newResourceTab = {};
-                    newResourceTab[resourceName] = response.result;
-                    subtopicObject.resourceTabs.push(newResourceTab);
+            let resourcePrompts = {
+                "Videos": `Provide 3 educational videos about ${subtopicName} in ${searchQuery}. The videos should be suitable for beginners and provide practical examples. Return the result in JSON format with the following structure: [{"title": "Video Title", "url": "Video URL", "description": "Short description of the video"}]`,
+
+                "Articles": `Find 3 beginner-friendly articles that explain the concept of ${subtopicName} in ${searchQuery}. The articles should be easy to understand and provide clear examples. Return the result in JSON format with the following structure: [{"title": "Article Title", "url": "Article URL", "description": "Short summary of the article"}]`,
+
+                "Courses": `Find 2 online courses that teach ${subtopicName} in ${searchQuery}. The courses should be suitable for beginners and provide a structured learning path. Return the result in JSON format with the following structure: [{"title": "Course Title", "url": "Course URL", "provider": "Course Provider", "description": "Brief course description"}]`,
+
+                "Books": `Recommend 2 books that cover ${subtopicName} in ${searchQuery}. The books should be suitable for beginners and provide in-depth knowledge. Return the result in JSON format with the following structure: [{"title": "Book Title", "author": "Author Name", "description": "Short book summary"}]`,
+
+                "Documentation": `Provide links to official documentation or reference materials for ${subtopicName} in ${searchQuery}. Return the result in JSON format with the following structure: [{"title": "Document Title", "url": "Document URL", "description": "Brief description of the document"}]`,
+
+                "Cheat Sheets": `Generate a cheat sheet that summarizes the key concepts of ${subtopicName} in ${searchQuery}. Return the result in JSON format with the following structure: [{"section": "Section Title", "content": "Key concepts and information"}]`,
+
+                "Practice Problems": `Find 5 coding practice problems from platforms like LeetCode,CodeChef and HackerRank that test the user's understanding of ${subtopicName} in ${searchQuery}. Return the result in JSON format with the following structure: [{"title": "Problem Title", "url": "Problem URL", "platform": "Platform Name"}]`,
+            };
+
+            let prompt = resourcePrompts[resourceName];
+
+            $.ajax({
+                url: '/gemini-search/generate-resources/', // Use the search_gemini URL
+                type: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    'prompt': prompt // Send the prompt
+                },
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(response) {
+                    let subtopics = data["SubTopics of " + searchQuery]["Description"]["subtopics"];
+                    let subtopicObject = subtopics.find(subtopic => subtopic.name === subtopicName);
+                
+                    if (subtopicObject && subtopicObject.resourceTabs) {
+                        // Find the index of the resource tab object if it exists, otherwise create a new object.
+                        let resourceTabIndex = subtopicObject.resourceTabs.findIndex(tab => Object.keys(tab)[0] === resourceName);
+                        if (resourceTabIndex !== -1){
+                            subtopicObject.resourceTabs[resourceTabIndex][resourceName] = response.result;
+                        } else {
+                            let newResourceTab = {};
+                            newResourceTab[resourceName] = response.result;
+                            subtopicObject.resourceTabs.push(newResourceTab);
+                        }
+                    
+                        $('#json_data').text(JSON.stringify(data, null, 2));
+                        $('#result_container pre').text(JSON.stringify(data, null, 2));
+                    
+                        let resultDiv = $('<div class="resource-result"><pre>' + JSON.stringify(response.result, null, 2) + '</pre></div>');
+                        buttonElement.after(resultDiv);
+                    } else {
+                        console.error("Subtopic object or resourceTabs is undefined.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error generating resources:", error);
                 }
-
-                $('#json_data').text(JSON.stringify(data, null, 2));
-                $('#result_container pre').text(JSON.stringify(data, null, 2));
-
-                let resultDiv = $('<div class="resource-result"><pre>' + JSON.stringify(response.result, null, 2) + '</pre></div>');
-                buttonElement.after(resultDiv);
-            } else {
-                console.error("Subtopic object or resourceTabs is undefined.");
+            });
             }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error generating resources:", error);
-        }
-    });
-}
     </script>
     {% csrf_token %}
 </body>

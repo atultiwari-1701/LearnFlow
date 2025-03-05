@@ -58,7 +58,7 @@ Output a single valid JSON object containing:
         "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone. **Example for 'Python':** Learning Python opens doors to exciting career opportunities and empowers you to build innovative applications."
     },
     "Resource Tab Suggestions for {topic-name}": {
-        "Description": "Provide 3 resource tab name suggestions that would be most helpful for learning {topic-name}. **Example for 'Python':** ['Videos', 'Articles','Courses']." 
+        "Description": "Provide 3 resource tab name suggestions that would be most helpful for learning {topic-name}. Strictly select from the following options: 'Videos', 'Articles', 'Courses', 'Books', 'Documentation','Cheat Sheets','Practice Problems'. **Example for 'Python':** ['Videos', 'Documentations', 'Practice Problems']" 
     },
     "SubTopics of {topic-name}": {
         "Description": {
@@ -180,11 +180,8 @@ def search_gemini(request):
 
 def generate_resources(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        subtopic = request.POST.get('subtopic')
-        resource = request.POST.get('resource')
-        search_query = request.POST.get('search_query')
-
-        prompt = f"Generate resources for {resource} in {subtopic} of {search_query}."
+        prompt =request.POST.get('prompt')
+        print(f"Prompt: {prompt}")
 
         try:
             response_text = call_gemini_model(prompt)
