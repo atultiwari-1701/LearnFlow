@@ -48,6 +48,7 @@
                         $('#loading_indicator').hide();
                         if (response && response.result) {
                             try {
+                                console.log("Response:", response.result);
                                 const parsedData = JSON.parse(response.result);
                                 const data = parsedData[0];
                                 console.log("Data:", data);
@@ -82,11 +83,9 @@
             $('#result_container').html('<pre id="json_data" style="display: none;">' + JSON.stringify(data, null, 2) + '</pre>'); //hide the json data
             $('#result_container').append('<pre>' + JSON.stringify(data, null, 2) + '</pre>'); //show the json data to the user.
 
-            const subTopicsKey = "SubTopics of " + searchQuery;
-
-            if (data[subTopicsKey] && data[subTopicsKey]["Description"] && data["Resource Tab Suggestions for " + searchQuery]) {
-                const resourceTabs = data["Resource Tab Suggestions for " + searchQuery]["Description"];
-                const subtopics = data[subTopicsKey]["Description"]["subtopics"];
+            if (data["SubTopics"] && data["SubTopics"]["Description"] && data["Resource Tab Suggestions"]) {
+                const resourceTabs = data["Resource Tab Suggestions"]["Description"];
+                const subtopics = data["SubTopics"]["Description"]["subtopics"];
 
                 subtopics.forEach(subtopic => {
                     let subtopicDiv = $('<div class="subtopic"><h3>' + subtopic.name + '</h3></div>');
@@ -147,7 +146,7 @@
         function generateResources(subtopicName, resourceName, searchQuery, data, buttonElement) {
 
             let resourcePrompts = {
-                "Videos": `Provide 3 educational videos about ${subtopicName} in ${searchQuery}. The videos should be suitable for beginners and provide practical examples. Return the result in JSON format with the following structure: [{"title": "Video Title", "url": "Video URL", "description": "Short description of the video"}]`,
+                "Videos": `Provide 3 educational videos about ${subtopicName} in ${searchQuery}. The videos should be suitable for beginners and provide practical examples.`,
 
                 "Articles": `Find 3 beginner-friendly articles that explain the concept of ${subtopicName} in ${searchQuery}. The articles should be easy to understand and provide clear examples. Return the result in JSON format with the following structure: [{"title": "Article Title", "url": "Article URL", "description": "Short summary of the article"}]`,
 
@@ -164,7 +163,33 @@
 
             let prompt = resourcePrompts[resourceName];
 
-            $.ajax({
+            if (resourceName === "Videos") {
+        // Call YouTube API via Django backend
+        $.ajax({
+            url: '/gemini-search/generate-youtube-videos/', // New Django endpoint
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+                'prompt': prompt,
+            },
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(response) {
+                if (response && response.result) {
+                    displayResourceResults(response.result, buttonElement, data, subtopicName, searchQuery, resourceName);
+                } else {
+                    console.error("YouTube API error or invalid response:", response);
+                    buttonElement.after('<p style="color:red;">Error fetching YouTube videos.</p>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("YouTube API AJAX error:", error);
+                buttonElement.after('<p style="color:red;">Error fetching YouTube videos.</p>');
+            }
+        });
+    } else {
+        // Existing Gemini model call for other resources
+        $.ajax({
                 url: '/gemini-search/generate-resources/', // Use the search_gemini URL
                 type: 'POST',
                 data: {
@@ -174,7 +199,7 @@
                 dataType: 'json',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 success: function(response) {
-                    let subtopics = data["SubTopics of " + searchQuery]["Description"]["subtopics"];
+                    let subtopics = data["SubTopics"]["Description"]["subtopics"];
                     let subtopicObject = subtopics.find(subtopic => subtopic.name === subtopicName);
                 
                     if (subtopicObject && subtopicObject.resourceTabs) {
@@ -201,7 +226,9 @@
                     console.error("Error generating resources:", error);
                 }
             });
-            }
+    }
+}
+
     </script>
     {% csrf_token %}
 </body>

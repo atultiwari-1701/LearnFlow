@@ -6,7 +6,9 @@ from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from google import genai
 from google.genai import types
+from .youtube_api import search_youtube
 import logging
+
 
 # Configure logging (optional, for debugging)
 logging.basicConfig(level=logging.DEBUG)
@@ -57,10 +59,10 @@ Output a single valid JSON object containing:
     "Need to Learn {topic-name}": {
         "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone. **Example for 'Python':** Learning Python opens doors to exciting career opportunities and empowers you to build innovative applications."
     },
-    "Resource Tab Suggestions for {topic-name}": {
+    "Resource Tab Suggestions": {
         "Description": "Provide 3 resource tab name suggestions that would be most helpful for learning {topic-name}. Strictly select from the following options: 'Videos', 'Articles', 'Courses', 'Books', 'Documentation','Cheat Sheets','Practice Problems'. **Example for 'Python':** ['Videos', 'Documentations', 'Practice Problems']" 
     },
-    "SubTopics of {topic-name}": {
+    "SubTopics": {
         "Description": {
             "subtopics": [
                 {
@@ -190,6 +192,34 @@ def generate_resources(request):
         except Exception as e:
             print(e) # add this line
             return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request.'}, status=400)
+
+
+
+logger = logging.getLogger(__name__)
+
+def generate_youtube_videos(request):
+    """Handles YouTube video generation requests."""
+    logger.info("generate_youtube_videos called")
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        prompt = request.POST.get('prompt', '')
+
+        if prompt:
+            try:
+                api_key = settings.YOUTUBE_API_KEY
+                results = search_youtube(api_key, prompt) #search youtube function called
+                if results:
+                    return JsonResponse({'result': results})
+                else:
+                    return JsonResponse({'error': 'YouTube API request failed.'}, status=500)
+            except Exception as e:
+                logger.error(f"Error in generate_youtube_videos: {e}")
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            logger.warning("Prompt is empty.")
+            return JsonResponse({'error': 'Prompt is empty.'}, status=400)
+
+    logger.warning("Invalid request to generate_youtube_videos.")
     return JsonResponse({'error': 'Invalid request.'}, status=400)
 
 def test(request):
