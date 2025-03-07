@@ -224,5 +224,46 @@ def generate_youtube_videos(request):
     logger.warning("Invalid request to generate_youtube_videos.")
     return JsonResponse({'error': 'Invalid request.'}, status=400)
 
+def generate_quiz(request):
+    """Generates a quiz using the Gemini model."""
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        subtopic = request.POST.get('subtopic', '')
+        topic = request.POST.get('topic', '')
+        num_questions = request.POST.get('num_questions', '5')
+        level = request.POST.get('level', 'beginner')
+        question_type = request.POST.get('question_type', 'multiple-choice')
+
+        if subtopic and topic:
+            prompt = f"""
+    Create a quiz on the subtopic of '{subtopic}' within the broader topic of '{topic}'. The quiz should consist of '{num_questions}' questions. The difficulty level of the questions should be '{level}'. All questions should be of type '{question_type}' (where Question Type is either 'multiple-choice' or 'true/false').
+
+    For each question, provide:
+    The question itself. The question should be clearly worded and unambiguous.
+
+    If the question type is multiple-choice:
+    Provide four answer options, labeled A, B, C, and D.
+    Clearly indicate the correct answer(s). If there are multiple correct answers, provide them all.
+    Indicate whether multiple answers are correct with a boolean flag: 'multiple_correct'. Set it to true if there are multiple correct answers, and false otherwise.
+
+    If the question type is true/false:
+    Clearly indicate the correct answer (True or False).
+
+    The quiz should comprehensively test understanding of the core concepts and details within the specified subtopic. Ensure there are no duplicate questions and the answers are factually accurate. The subtopic should be narrow enough that {num_questions} questions at the specified level can be meaningfully generated. Prioritize clarity and conciseness in the questions and answers. The language must be appropriate for assessment. Avoid questions with subjective answers.
+
+    Return the quiz in JSON format, with the following structure: `[{{\"question\": \"Question text\", \"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"], \"answer\": [\"Correct Answer 1\", \"Correct Answer 2\", ...], \"multiple_correct\": true/false}}]` for multiple choice, and `[{{\"question\": \"Question text\", \"answer\": \"True/False\"}}]` for true/false questions. If the subtopic is too broad or narrow to generate the requested number of questions, return an error message in json format: `{{\"error\": \"error message\"}}`
+                """
+
+            try:
+                response_text = call_gemini_model(prompt)  # Use your function
+                quiz_data = eval(response_text) #evaluate the response text to a python object.
+                logger.info('Generated Quiz Response: %s', quiz_data)
+                return JsonResponse({'quiz': quiz_data})
+            except Exception as e:
+                logger.error(f"Error generating quiz: {e}")
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            return JsonResponse({'error': 'Subtopic or topic is empty.'}, status=400)
+    return JsonResponse({'error': 'Invalid request.'}, status=400)
+
 def test(request):
     return HttpResponse("Simple URL test: This is a test response.")
