@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-    <h1>Gemini Search</h1>
+    <h1>LearnFLow Search</h1>
     <input type="text" id="search_input">
     <button id="search_button">Search</button>
     <div id="result_container"></div>
@@ -70,7 +70,7 @@
             });
 
             $(document).on('click', '.resource-button', function() {
-                let subtopicName = $(this).data('subtopic');
+                let subtopicName = $(this).data('subtopics');
                 let resourceName = $(this).data('resource');
                 let searchQuery = $('#search_input').val(); //get the search query from the input.
                 let data = JSON.parse($('#json_data').text()); //get the data from the hidden element.
