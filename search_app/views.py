@@ -6,7 +6,6 @@ from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from google import genai
 from google.genai import types
-from google.g 
 from .youtube_api import search_youtube
 import logging
 

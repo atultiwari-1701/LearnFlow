@@ -50,7 +50,7 @@
                             try {
                                 console.log("Response:", response.result);
                                 const parsedData = JSON.parse(response.result);
-                                const data = parsedData[0];
+                                const data = parsedData[searchQuery];
                                 console.log("Data:", data);
                                 displaySearchResults(data, searchQuery); // Call displaySearchResults
                             } catch (e) {
@@ -70,8 +70,10 @@
             });
 
             $(document).on('click', '.resource-button', function() {
-                let subtopicName = $(this).data('subtopics');
+                let subtopicName = $(this).data('subtopic');
+                console.log("Subtopic Name:", subtopicName);
                 let resourceName = $(this).data('resource');
+                console.log("Resource Name:", resourceName);
                 let searchQuery = $('#search_input').val(); //get the search query from the input.
                 let data = JSON.parse($('#json_data').text()); //get the data from the hidden element.
 
@@ -245,7 +247,7 @@
                         let resultDiv = $('<div class="resource-result"><pre>' + JSON.stringify(response.result, null, 2) + '</pre></div>');
                         buttonElement.after(resultDiv);
                     } else {
-                        console.error("Subtopic object or resourceTabs is undefined.");
+                        console.error("Subtopic object or resourceTabs is undefined");
                     }
                 },
                 error: function(xhr, status, error) {
