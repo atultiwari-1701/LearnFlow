@@ -50,14 +50,17 @@ Replace the value of {topic-name} in the output object.
 
 Gather the following information about the topic {topic-name}.
 
-Output a single valid JSON object inside the response with key as {topic}:
+Output a single valid JSON object inside the response with key as {topic} and another key as "topic" and its value to be the {topic-name} for example {"topic": "Python", "Python": {rest as shown below}}. The JSON object should contain the following keys and values:
 
 {
     "Short Description": {
         "Description": "Write a concise description between 100 and 120 words, using a friendly and conversational tone that encourages beginners. Highlight key points using **bold** text. **Example for 'Python':** **Python** is a versatile language known for its readability. It's used in web development, data science, and more." 
     },
     "Need to Learn {topic-name}": {
-        "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone. **Example for 'Python':** Learning Python opens doors to exciting career opportunities and empowers you to build innovative applications."
+        "Description": "Explain in a maximum of 50 words why learning {topic-name} is valuable. Use a motivating, beginner-friendly tone. **Example for 'Python':** Learning Python opens doors to exciting career opportunities and empowers you to build innovative applications.",
+        "Benefit 1": {"heading": "give breif heading in 1 or 2 words", "description": "give breif description in 20-30 words"},
+        "Benefit 2": {"heading": "give breif heading in 1 or 2 words", "description": "give breif description in 20-30 words"},
+        "Benefit 3": {"heading": "give breif heading in 1 or 2 words", "description": "give breif description in 20-30 words"},
     },
     "Resource Tab Suggestions": {
         "Description": "Provide 3 resource tab name suggestions that would be most helpful for learning {topic-name}. Strictly select from the following options: 'Videos', 'Articles', 'Courses', 'Books', 'Documentation','Cheat Sheets','Practice Problems'. **Example for 'Python':** ['Videos', 'Documentations', 'Practice Problems']" 
@@ -66,7 +69,7 @@ Output a single valid JSON object inside the response with key as {topic}:
         "Description": {
             "subtopics": [
                 {
-                    "name": "Subtopic Name 1",
+                    "name": "give name of subtopic here",
                     "description": "40-50 word description. **Example for 'Python Variables':** Understanding how to store and manipulate data.",
                     "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery. **Example for 'Python Variables':** Beginner",
                     "timeToComplete": "e.g., 2 hours. **Example for 'Python Variables':** 2 hours",
@@ -79,7 +82,7 @@ Output a single valid JSON object inside the response with key as {topic}:
                     resourceTabs: [],          
                 },
                 {
-                    "name": "Subtopic Name 2",
+                    "name": "give name of subtopic here",
                     "description": "40-50 word description. **Example for 'Python Loops':** Learning to control program flow.",
                     "difficulty": "Beginner, Intermediate, Advanced, Expert, Mastery. **Example for 'Python Loops':** Intermediate",
                     "timeToComplete": "e.g., 2 hours. **Example for 'Python Loops':** 3 hours",
@@ -121,7 +124,27 @@ Output a single valid JSON object inside the response with key as {topic}:
                     "howToConquer": "Actionable advice. **Example for 'Python':** Build personal projects.",
                     "insiderTips": "50-word tips. **Example for 'Python':** Focus on readability."
                 },
-                // Add more levels as needed (At least 3 levels are required)
+                {
+                    "name": "Advanced Level",
+                    "topics": [
+                        "**Example for 'Python':** Data analysis.",
+                        "**Example for 'Python':** Machine learning.",
+                        "**Example for 'Python':** Advanced libraries."
+                    ],
+                    "howToConquer": "Actionable advice. **Example for 'Python':** Contribute to open-source.",
+                    "insiderTips": "50-word tips. **Example for 'Python':** Stay updated with trends."
+                },
+                {
+                    "name": "Expert Level",
+                    "topics": [
+                        "**Example for 'Python':** Performance optimization.",
+                        "**Example for 'Python':** Advanced algorithms.",
+                        "**Example for 'Python':** System design."
+                    ],
+                    "howToConquer": "Actionable advice. **Example for 'Python':** Mentor others.",
+                    "insiderTips": "50-word tips. **Example for 'Python':** Network with professionals."
+                },
+                // At least 3 levels are required
             ]
         }
     },
@@ -162,7 +185,7 @@ def search_gemini(request):
     print("search_gemini called")
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         print("it is a post request")
-        topic_name = request.POST.get('search_query', '')
+        topic_name = json.loads(request.body).get('search_query', '')
         print(f"topic_name: {topic_name}")
         if topic_name:
             try:
