@@ -181,16 +181,28 @@ Output a single valid JSON object inside the response with key as {topic} and an
     """
     return prompt_template.replace("{topic}", topic)
 
+from .models import Topic
+
 def search_gemini(request):
     print("search_gemini called")
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         print("it is a post request")
         topic_name = json.loads(request.body).get('search_query', '')
         print(f"topic_name: {topic_name}")
+
+        if Topic.objects.filter(name=topic_name).exists():
+            print(f"Topic '{topic_name}' already exists in the database.")
+            topic = Topic.objects.get(name=topic_name)
+            response_text = topic.content
+            return JsonResponse({'result': response_text})
+
         if topic_name:
             try:
                 prompt = generate_prompt(topic_name)
                 response_text = call_gemini_model(prompt)
+                # Save the response_text in the Topics model
+                topic = Topic(name=topic_name, content=response_text)
+                topic.save()
                 print("Gemini API call successful")
                 return JsonResponse({'result': response_text})
             except Exception as e:
