@@ -276,7 +276,6 @@ def generate_quiz(request):
 
                     type: string; // The type of question. It can be 'mcq', 'true-false' or 'multiple-correct'.
                     question: string; // The question itself.
-                    4 options: string[]; // The options for the question.
                     options: string[]; // The options for the question. For 'mcq' and 'multiple-correct', there should be 4 options. For 'true-false', there should be only 2 options: 'True' and 'False'.
                     correctAnswers: number[]; // The indexes of the correct answers. For 'mcq', there should be only one correct answer (0, 1, 2 or 3). For 'multiple-correct', there can be multiple correct answers. For 'true-false', the correct answer is either 0 or 1.
                     explanation: string; // The explanation for the correct answer. It should be clear and concise, providing enough information for the learner to understand why the answer is correct.
@@ -293,7 +292,6 @@ def generate_quiz(request):
 
                     type: string; // The type of question. It can be 'mcq', 'true-false' or 'multiple-correct'.
                     question: string; // The question itself.
-                    4 options: string[]; // The options for the question.
                     options: string[]; // The options for the question. For 'mcq' and 'multiple-correct', there should be 4 options. For 'true-false', there should be only 2 options: 'True' and 'False'.
                     correctAnswers: number[]; // The indexes of the correct answers. For 'mcq', there should be only one correct answer (0, 1, 2 or 3). For 'multiple-correct', there can be multiple correct answers. For 'true-false', the correct answer is either 0 or 1.
                     explanation: string; // The explanation for the correct answer. It should be clear and concise, providing enough information for the learner to understand why the answer is correct.
