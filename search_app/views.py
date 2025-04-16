@@ -294,6 +294,7 @@ def generate_quiz(request):
                 quiz_data = {
                     "quiz": [
                         {
+                            "id": q.id,
                             "type": q.question_type,
                             "question": q.question,
                             "options": q.options,
@@ -325,25 +326,53 @@ def generate_quiz(request):
             response_text = call_gemini_model(prompt)
             quiz_data = eval(response_text)
             
-            # Store new questions in database
+            # Store new questions in database and collect their IDs
+            final_questions = []
             for question in quiz_data["quiz"]:
                 try:
-                    QuizQuestion.objects.create(
+                    # Check if question already exists
+                    existing_question = QuizQuestion.objects.filter(
                         topic=topic,
                         subtopic=subtopic,
                         question_type=question_type,
-                        question=question["question"],
-                        options=question["options"],
-                        correct_answers=question["correctAnswers"],
-                        explanation=question["explanation"],
-                        source="gemini"
-                    )
+                        question=question["question"]
+                    ).first()
+
+                    if existing_question:
+                        # Use existing question with its ID
+                        final_questions.append({
+                            "id": existing_question.id,
+                            "type": existing_question.question_type,
+                            "question": existing_question.question,
+                            "options": existing_question.options,
+                            "correctAnswers": existing_question.correct_answers,
+                            "explanation": existing_question.explanation
+                        })
+                    else:
+                        # Create new question and get its ID
+                        new_question = QuizQuestion.objects.create(
+                            topic=topic,
+                            subtopic=subtopic,
+                            question_type=question_type,
+                            question=question["question"],
+                            options=question["options"],
+                            correct_answers=question["correctAnswers"],
+                            explanation=question["explanation"],
+                            source="gemini"
+                        )
+                        final_questions.append({
+                            "id": new_question.id,
+                            "type": new_question.question_type,
+                            "question": new_question.question,
+                            "options": new_question.options,
+                            "correctAnswers": new_question.correct_answers,
+                            "explanation": new_question.explanation
+                        })
                 except Exception as e:
-                    # If question already exists, skip it
-                    logger.warning(f"Question already exists: {e}")
+                    logger.warning(f"Error processing question: {e}")
                     continue
             
-            return JsonResponse({'quiz': quiz_data})
+            return JsonResponse({'quiz': {"quiz": final_questions}})
 
         except Exception as e:
             logger.error(f"Error generating quiz: {e}")
