@@ -8,6 +8,9 @@ from google import genai
 from google.genai import types
 from .youtube_api import search_youtube
 import logging
+import random
+from django.db.models import Count
+from .models import QuizQuestion
 
 
 # Configure logging (optional, for debugging)
@@ -260,54 +263,92 @@ def generate_youtube_videos(request):
     return JsonResponse({'error': 'Invalid request.'}, status=400)
 
 def generate_quiz(request):
-    """Generates a quiz using the Gemini model."""
+    """Generates a quiz using either the database or Gemini model with 50-50 chance."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         subtopic = json.loads(request.body).get('subtopic', '')
         topic = json.loads(request.body).get('topic', '')
-        num_questions = json.loads(request.body).get('num_questions', '')
-        # level = request.POST.get('level', 'beginner')
+        num_questions = int(json.loads(request.body).get('num_questions', 0))
         question_type = json.loads(request.body).get('question_type', '')
 
-        if subtopic and topic:
-            prompt = f"""
-                Create a quiz on the subtopic of '{subtopic}' within the broader topic of '{topic}'. The quiz should consist of '{num_questions}' questions. All questions should be of type '{question_type}' (where Question Type is either 'mcq' or 'true-false' or 'multiple-correct').
+        if not all([topic, num_questions, question_type]):
+            return JsonResponse({'error': 'Missing required parameters'}, status=400)
 
-                For each question, provide:
-
-                    type: string; // The type of question. It can be 'mcq', 'true-false' or 'multiple-correct'.
-                    question: string; // The question itself.
-                    options: string[]; // The options for the question. For 'mcq' and 'multiple-correct', there should be 4 options. For 'true-false', there should be only 2 options: 'True' and 'False'.
-                    correctAnswers: number[]; // The indexes of the correct answers. For 'mcq', there should be only one correct answer (0, 1, 2 or 3). For 'multiple-correct', there can be multiple correct answers. For 'true-false', the correct answer is either 0 or 1.
-                    explanation: string; // The explanation for the correct answer. It should be clear and concise, providing enough information for the learner to understand why the answer is correct.
-
-                The quiz should comprehensively test understanding of the core concepts and details within the specified subtopic. Ensure there are no duplicate questions and the answers are factually accurate. The subtopic should be narrow enough that {num_questions} questions at the specified level can be meaningfully generated. Prioritize clarity and conciseness in the questions and answers. The language must be appropriate for assessment. Avoid questions with subjective answers.
-
-                Return the quiz in JSON format. The JSON object should contain a key "quiz" with the value being an array of questions. Each question should be an object with the keys "question", "options", "correctAnswers", "type" and "explanation". and no additional text.
-            """
-        else:
-            prompt = f"""
-                Create a quiz on the topic of '{topic}'. The quiz should consist of '{num_questions}' questions. All questions should be of type '{question_type}' (where Question Type is either 'mcq' or 'true-false' or 'multiple-correct').
-
-                For each question, provide:
-
-                    type: string; // The type of question. It can be 'mcq', 'true-false' or 'multiple-correct'.
-                    question: string; // The question itself.
-                    options: string[]; // The options for the question. For 'mcq' and 'multiple-correct', there should be 4 options. For 'true-false', there should be only 2 options: 'True' and 'False'.
-                    correctAnswers: number[]; // The indexes of the correct answers. For 'mcq', there should be only one correct answer (0, 1, 2 or 3). For 'multiple-correct', there can be multiple correct answers. For 'true-false', the correct answer is either 0 or 1.
-                    explanation: string; // The explanation for the correct answer. It should be clear and concise, providing enough information for the learner to understand why the answer is correct.
-
-                The quiz should comprehensively test understanding of the core concepts and details within the specified topic {topic}. Ensure there are no duplicate questions and the answers are factually accurate. The subtopic should be narrow enough that {num_questions} questions at the specified level can be meaningfully generated. Prioritize clarity and conciseness in the questions and answers. The language must be appropriate for assessment. Avoid questions with subjective answers.
-
-                Return the quiz in JSON format. The JSON object should contain a key "quiz" with the value being an array of questions. Each question should be an object with the keys "question", "options", "correctAnswers", "type" and "explanation". and no additional text.
-            """
         try:
-            response_text = call_gemini_model(prompt)  # Use your function
-            quiz_data = eval(response_text) #evaluate the response text to a python object.
-            logger.info('Generated Quiz Response: %s', quiz_data)
+            # 50-50 chance to use database or Gemini
+            use_database = random.choice([True, False])
+            
+            # Check available questions in database
+            db_questions = QuizQuestion.objects.filter(
+                topic__iexact=topic,
+                question_type=question_type
+            )
+            
+            if subtopic:
+                db_questions = db_questions.filter(subtopic__iexact=subtopic)
+
+            db_question_count = db_questions.count()
+            
+            if use_database and db_question_count >= num_questions:
+                # Use database questions
+                selected_questions = random.sample(list(db_questions), num_questions)
+                quiz_data = {
+                    "quiz": [
+                        {
+                            "type": q.question_type,
+                            "question": q.question,
+                            "options": q.options,
+                            "correctAnswers": q.correct_answers,
+                            "explanation": q.explanation
+                        }
+                        for q in selected_questions
+                    ]
+                }
+                return JsonResponse({'quiz': quiz_data})
+            
+            # If we chose database but don't have enough questions, or chose Gemini
+            # Get questions from Gemini
+            prompt = f"""
+                Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic}. 
+                The quiz should consist of {num_questions} questions. 
+                All questions should be of type '{question_type}'.
+                
+                For each question, provide:
+                    type: string;
+                    question: string;
+                    options: string[];
+                    correctAnswers: number[];
+                    explanation: string;
+                
+                Return the quiz in JSON format with a "quiz" key containing an array of questions.
+            """
+            
+            response_text = call_gemini_model(prompt)
+            quiz_data = eval(response_text)
+            
+            # Store new questions in database
+            for question in quiz_data["quiz"]:
+                try:
+                    QuizQuestion.objects.create(
+                        topic=topic,
+                        subtopic=subtopic,
+                        question_type=question_type,
+                        question=question["question"],
+                        options=question["options"],
+                        correct_answers=question["correctAnswers"],
+                        explanation=question["explanation"],
+                        source="gemini"
+                    )
+                except Exception as e:
+                    # If question already exists, skip it
+                    logger.warning(f"Question already exists: {e}")
+                    continue
+            
             return JsonResponse({'quiz': quiz_data})
+
         except Exception as e:
             logger.error(f"Error generating quiz: {e}")
             return JsonResponse({'error': str(e)}, status=500)
+    
     return JsonResponse({'error': 'Invalid request.'}, status=400)
 
 def test(request):
