@@ -47,9 +47,12 @@ class QuizAttempt(models.Model):
 
     class Meta:
         ordering = ['-created_at']  # Order by most recent first
+        indexes = [
+            models.Index(fields=['user_id']),  # Add index for user_id
+        ]
 
     def __str__(self):
-        return f"Quiz Attempt by {self.user.username} on {self.created_at}"
+        return f"Quiz Attempt by {self.user.name} on {self.created_at}"
 
 class QuestionAttempt(models.Model):
     quiz_attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='question_attempts')
