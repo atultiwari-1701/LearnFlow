@@ -3,4 +3,7 @@ from .models import Topic, QuizQuestion
 
 # Register your models here.
 admin.site.register(Topic)
-admin.site.register(QuizQuestion)
+
+@admin.register(QuizQuestion)
+class QuizQuestionAdmin(admin.ModelAdmin):
+    list_display = ('question', 'question_type')

@@ -24,7 +24,8 @@ def save_quiz_attempt(request):
             correct_attempts=data['correct_attempts'],
             incorrect_attempts=data['incorrect_attempts'],
             partial_attempts=data['partial_attempts'],
-            unattempted=data['unattempted']
+            unattempted=data['unattempted'],
+            is_negative_marking=data.get('is_negative_marking', False)
         )
         
         # Create question attempts

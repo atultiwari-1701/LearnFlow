@@ -314,7 +314,7 @@ def generate_quiz(request):
                 Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic}. 
                 The quiz should consist of {num_questions} questions. 
                 All questions should be of type '{question_type}'.
-                
+                there should be only 4 options for mcq type and multiple-correct type questions and only 2 options for true-false type questions.
                 For each question, provide:
                     type: string;
                     question: string;
