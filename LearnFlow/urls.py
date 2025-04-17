@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('gemini-search/', include('search_app.urls')),
     path('authentication/', include('authentication.urls')),
+    path('quiz/', include('quiz.urls')),
 ]

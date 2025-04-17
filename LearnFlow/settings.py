@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'search_app',
     'authentication',
+    'quiz',
     'corsheaders',
 ]
 
