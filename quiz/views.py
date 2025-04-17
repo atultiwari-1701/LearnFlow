@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from .models import QuizAttempt, QuestionAttempt
 from search_app.models import QuizQuestion
+from django.core.serializers.json import DjangoJSONEncoder
+from authentication.models import User
 
 # Create your views here.
 def save_quiz_attempt(request):
@@ -60,6 +62,79 @@ def save_quiz_attempt(request):
             'status': 'success',
             'message': 'Quiz attempt saved successfully'
         })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
+
+def get_quiz_history(request):
+    """
+    Returns quiz history data in the format matching SAMPLE_QUIZZES from the frontend
+    """
+    try:
+        # Get user_id from query parameters
+        user_id = request.GET.get('user_id')
+        if not user_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'user_id parameter is required'
+            }, status=400)
+
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'User not found'
+            }, status=404)
+
+        # Get all quiz attempts for the specified user
+        quiz_attempts = QuizAttempt.objects.filter(user=user).order_by('-created_at')
+        
+        quiz_history = []
+        
+        for attempt in quiz_attempts:
+            # Get all question attempts for this quiz
+            question_attempts = attempt.question_attempts.all()
+            
+            questions = []
+            for q_attempt in question_attempts:
+                question = q_attempt.question
+                questions.append({
+                    'question': question.question,
+                    'options': question.options,
+                    'correctAnswers': question.correct_answers,
+                    'selectedAnswers': q_attempt.attempted_options,
+                    'isCorrect': q_attempt.is_correct,
+                    'partiallyCorrect': q_attempt.is_partial,
+                    'timeTaken': q_attempt.time_taken,
+                    'score': q_attempt.score,
+                    'explanation': question.explanation
+                })
+            
+            quiz_data = {
+                'id': str(attempt.id),
+                'topic': attempt.topic,
+                'subtopic': attempt.subtopic,
+                'date': attempt.created_at.strftime('%Y-%m-%d'),
+                'percentage': attempt.score_percentage,
+                'total_possible_score': attempt.total_possible_score,
+                'score': attempt.score,
+                'timeSpent': attempt.total_time_taken,
+                'negativeMarking': attempt.is_negative_marking,
+                'question_type': question_attempts.first().question.question_type,
+                'questions': questions
+            }
+            
+            quiz_history.append(quiz_data)
+        
+        return JsonResponse({
+            'status': 'success',
+            'quizzes': quiz_history
+        }, encoder=DjangoJSONEncoder)
         
     except Exception as e:
         return JsonResponse({
