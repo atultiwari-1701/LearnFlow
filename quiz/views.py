@@ -16,6 +16,18 @@ def save_quiz_attempt(request):
     try:
         data = json.loads(request.body)
         
+        # Validate required fields
+        required_fields = ['user_id', 'total_time_taken', 'score', 'correct_attempts', 
+                            'incorrect_attempts', 'partial_attempts', 'unattempted', 
+                            'topic', 'subtopic', 'question_attempts']
+        
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Missing required field: {field}'
+                }, status=400)
+        
         # Create the quiz attempt
         quiz_attempt = QuizAttempt.objects.create(
             user_id=data['user_id'],
@@ -25,7 +37,9 @@ def save_quiz_attempt(request):
             incorrect_attempts=data['incorrect_attempts'],
             partial_attempts=data['partial_attempts'],
             unattempted=data['unattempted'],
-            is_negative_marking=data.get('is_negative_marking', False)
+            is_negative_marking=data.get('is_negative_marking', False),
+            topic=data['topic'],
+            subtopic=data['subtopic']
         )
         
         # Create question attempts

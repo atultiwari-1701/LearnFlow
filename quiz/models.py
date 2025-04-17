@@ -14,6 +14,8 @@ class QuizAttempt(models.Model):
     partial_attempts = models.IntegerField()
     unattempted = models.IntegerField()
     is_negative_marking = models.BooleanField(default=False, help_text="Whether negative marking was enabled for this quiz")
+    topic = models.CharField(max_length=255, help_text="Topic of the quiz", blank=True)
+    subtopic = models.CharField(max_length=255, help_text="Subtopic of the quiz", blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -22,7 +24,7 @@ class QuizAttempt(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.name}'s attempt on {self.created_at}"
+        return f"{self.user.name}'s attempt on {self.topic} - {self.subtopic} at {self.created_at}"
 
     @property
     def total_questions(self):
