@@ -10,6 +10,10 @@ from .youtube_api import search_youtube
 import logging
 import random
 from .models import QuizQuestion
+from itertools import cycle
+
+_gemini_api_key_cycle = cycle(settings.GEMINI_API_KEYS)
+_youtube_api_key_cycle = cycle(settings.YOUTUBE_API_KEYS)
 
 # Configure logging (optional, for debugging)
 logging.basicConfig(level=logging.DEBUG)
@@ -19,7 +23,7 @@ def call_gemini_model(prompt, model_name="gemini-2.0-pro-exp-02-05", temperature
     Calls the Gemini model with the given prompt and configuration.
     """
     try:
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        client = genai.Client(api_key=next(_gemini_api_key_cycle))
         contents = [
             types.Content(
                 role="user",
@@ -242,7 +246,7 @@ def generate_youtube_videos(request):
 
         if prompt:
             try:
-                api_key = settings.YOUTUBE_API_KEY
+                api_key = next(_youtube_api_key_cycle)
                 print(api_key)
                 results = search_youtube(api_key, prompt) #search youtube function called
                 if results:

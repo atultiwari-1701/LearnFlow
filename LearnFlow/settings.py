@@ -32,11 +32,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-GEMINI_API_KEY =os.environ.get('GEMINI_API_KEY')
-print(f"GEMINI_API_KEY: {GEMINI_API_KEY}") #Add this line.
+GEMINI_API_KEYS = [os.environ.get('GEMINI_API_KEY_1'), os.environ.get('GEMINI_API_KEY_2'), os.environ.get('GEMINI_API_KEY_3'), os.environ.get('GEMINI_API_KEY_4')]
+# print(f"GEMINI_API_KEYS: {GEMINI_API_KEYS}") #Add this line.
 
-YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
-print(f"YOUTUBE_API_KEY: {YOUTUBE_API_KEY}") #Add this line.
+YOUTUBE_API_KEYS = [os.environ.get('YOUTUBE_API_KEY_1'), os.environ.get('YOUTUBE_API_KEY_2'), os.environ.get('YOUTUBE_API_KEY_3'), os.environ.get('YOUTUBE_API_KEY_4')]
+# print(f"YOUTUBE_API_KEY: {YOUTUBE_API_KEYS}") #Add this line.
 
 
 # Application definition
