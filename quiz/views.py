@@ -56,21 +56,6 @@ def save_quiz_attempt(request):
                 # Skip if question doesn't exist
                 continue
         
-        # Keep only the latest 5 attempts for this user
-        # First get all attempts ordered by creation date
-        all_attempts = QuizAttempt.objects.filter(
-            user_id=data['user_id']
-        ).order_by('-created_at')
-        
-        # If there are more than 5 attempts, delete the older ones
-        if all_attempts.count() > 5:
-            # Get IDs of attempts to keep (latest 5)
-            keep_ids = list(all_attempts.values_list('id', flat=True)[:5])
-            # Delete all attempts except the ones to keep
-            QuizAttempt.objects.filter(
-                user_id=data['user_id']
-            ).exclude(id__in=keep_ids).delete()
-        
         return JsonResponse({
             'status': 'success',
             'message': 'Quiz attempt saved successfully'
