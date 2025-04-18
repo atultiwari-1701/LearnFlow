@@ -242,7 +242,7 @@ def generate_youtube_videos(request):
     """Handles YouTube video generation requests."""
     logger.info("generate_youtube_videos called")
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        prompt = request.POST.get('prompt', '')
+        prompt = json.loads(request.body).get('prompt', '')
 
         if prompt:
             try:
