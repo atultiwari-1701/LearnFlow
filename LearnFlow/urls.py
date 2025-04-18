@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include 
+from django.views.decorators.csrf import csrf_exempt
+
+admin.site.login = csrf_exempt(admin.site.login)
 
 urlpatterns = [
+    path('admin/login/', csrf_exempt(admin.site.login)),
     path('admin/', admin.site.urls),
     path('gemini-search/', include('search_app.urls')),
     path('authentication/', include('authentication.urls')),
