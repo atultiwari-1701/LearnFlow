@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import QuizAttempt, QuestionAttempt
-from search_app.models import QuizQuestion
+from search_app.models import QuizQuestion, Topic
 from django.core.serializers.json import DjangoJSONEncoder
 from authentication.models import User
 
@@ -30,6 +30,16 @@ def save_quiz_attempt(request):
                     'message': f'Missing required field: {field}'
                 }, status=400)
         
+        # Get or create the Topic object
+        topic_name = data['topic']
+        try:
+            topic = Topic.objects.get(name=topic_name)
+        except Topic.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Topic not found'
+            }, status=404)
+        
         # Create the quiz attempt
         quiz_attempt = QuizAttempt.objects.create(
             user_id=data['user_id'],
@@ -40,7 +50,7 @@ def save_quiz_attempt(request):
             partial_attempts=data['partial_attempts'],
             unattempted=data['unattempted'],
             is_negative_marking=data.get('is_negative_marking', False),
-            topic=data['topic'],
+            topic=topic,
             subtopic=data['subtopic']
         )
         
@@ -117,7 +127,7 @@ def get_quiz_history(request):
             
             quiz_data = {
                 'id': str(attempt.id),
-                'topic': attempt.topic,
+                'topic': attempt.topic.name,  # Use topic name from Topic object
                 'subtopic': attempt.subtopic,
                 'date': attempt.created_at.strftime('%Y-%m-%d'),
                 'percentage': attempt.score_percentage,
