@@ -110,7 +110,8 @@ Output a single valid JSON object inside the response with key as {topic} and an
             },
             "levels": [
                 {
-                    "name": "Basic Level",
+                    "name": "Basic Level", // must be "Basic Level" if basic level exists
+                    "description": "Give basic description in 3-5 words of what this level contains",
                     "topics": [
                         "**Example for 'Python':** Setting up Python environment.",
                         "**Example for 'Python':** Basic syntax.",
@@ -120,7 +121,8 @@ Output a single valid JSON object inside the response with key as {topic} and an
                     "insiderTips": "50-word tips. **Example for 'Python':** Join online communities."
                 },
                 {
-                    "name": "Intermediate Level",
+                    "name": "Intermediate Level", // must be "Intermediate Level" if Intermediate level exists
+                    "description": "Give basic description in 3-5 words of what this level contains",
                     "topics": [
                         "**Example for 'Python':** Object-oriented programming.",
                         "**Example for 'Python':** Working with APIs.",
@@ -130,7 +132,8 @@ Output a single valid JSON object inside the response with key as {topic} and an
                     "insiderTips": "50-word tips. **Example for 'Python':** Focus on readability."
                 },
                 {
-                    "name": "Advanced Level",
+                    "name": "Advanced Level", // must be "Advanced Level" if Advanced level exists
+                    "description": "Give basic description in 3-5 words of what this level contains",
                     "topics": [
                         "**Example for 'Python':** Data analysis.",
                         "**Example for 'Python':** Machine learning.",
@@ -140,7 +143,8 @@ Output a single valid JSON object inside the response with key as {topic} and an
                     "insiderTips": "50-word tips. **Example for 'Python':** Stay updated with trends."
                 },
                 {
-                    "name": "Expert Level",
+                    "name": "Expert Level", // must be "Expert Level" if Expert level exists
+                    "description": "Give basic description in 3-5 words of what this level contains",
                     "topics": [
                         "**Example for 'Python':** Performance optimization.",
                         "**Example for 'Python':** Advanced algorithms.",
