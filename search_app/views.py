@@ -17,6 +17,7 @@ _youtube_api_key_cycle = cycle(settings.YOUTUBE_API_KEYS)
 
 # Configure logging (optional, for debugging)
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def call_gemini_model(prompt, model_name="gemini-2.0-pro-exp-02-05", temperature=1, top_p=0.95, top_k=64, max_output_tokens=8192, response_mime_type="application/json"):
     """
@@ -219,48 +220,6 @@ def search_gemini(request):
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-def generate_resources(request):
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        prompt =request.POST.get('prompt')
-        print(f"Prompt: {prompt}")
-
-        try:
-            response_text = call_gemini_model(prompt)
-            print(response_text) # add this line
-            return JsonResponse({'result': response_text})
-        except Exception as e:
-            print(e) # add this line
-            return JsonResponse({'error': str(e)}, status=500)
-    return JsonResponse({'error': 'Invalid request.'}, status=400)
-
-logger = logging.getLogger(__name__)
-
-def generate_youtube_videos(request):
-    """Handles YouTube video generation requests."""
-    logger.info("generate_youtube_videos called")
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        prompt = json.loads(request.body).get('prompt', '')
-
-        if prompt:
-            try:
-                api_key = next(_youtube_api_key_cycle)
-                print(api_key)
-                results = search_youtube(api_key, prompt) #search youtube function called
-                if results:
-                    logger.info(results)
-                    return JsonResponse({'result': results})
-                else:
-                    return JsonResponse({'error': 'YouTube API request failed.'}, status=500)
-            except Exception as e:
-                logger.error(f"Error in generate_youtube_videos: {e}")
-                return JsonResponse({'error': str(e)}, status=500)
-        else:
-            logger.warning("Prompt is empty.")
-            return JsonResponse({'error': 'Prompt is empty.'}, status=400)
-
-    logger.warning("Invalid request to generate_youtube_videos.")
-    return JsonResponse({'error': 'Invalid request.'}, status=400)
-
 def generate_quiz(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
@@ -373,83 +332,6 @@ def generate_quiz(request):
     except Exception as e:
         logger.error(f"Error generating quiz: {e}")
         return JsonResponse({'error': str(e)}, status=400)
-
-def test(request):
-    return HttpResponse("Simple URL test: This is a test response.")
-
-def generate_resources_for_topic(request):
-    """Generate learning resources for a specific topic using Gemini and YouTube APIs."""
-    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        try:
-            data = json.loads(request.body)
-            topic_name = data.get('topic_name', '')
-            subtopic_name = data.get('subtopic_name', '')
-            
-            if not topic_name:
-                return JsonResponse({'error': 'Topic name is required'}, status=400)
-            
-            # Generate YouTube videos
-            youtube_prompt = f"{f'{topic_name} {subtopic_name}' if subtopic_name else topic_name} tutorial"
-            youtube_results = search_youtube(next(_youtube_api_key_cycle), youtube_prompt)
-            
-            # Format YouTube results
-            videos = []
-            if youtube_results:
-                for video in youtube_results[:2]:  # Get top 2 videos
-                    # Extract video ID from the URL
-                    video_url = video.get('url', '')
-                    video_id = video_url.split('v=')[-1] if 'v=' in video_url else ''
-                    
-                    videos.append({
-                        'title': video.get('title', ''),
-                        'url': video_url,
-                        'duration': video.get('duration', ''),
-                        'thumbnail': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else ''
-                    })
-            
-            # Generate articles and documentation using Gemini
-            gemini_prompt = f"""
-                Generate a list of learning resources for {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
-                Return a JSON object with the following structure:
-                {{
-                    "articles": [
-                        {{
-                            "title": "article title",
-                            "url": "article url",
-                            "readTime": "estimated read time"
-                        }}
-                    ],
-                    "documentation": [
-                        {{
-                            "title": "documentation title",
-                            "url": "documentation url",
-                            "type": "documentation type"
-                        }}
-                    ]
-                }}
-                
-                For articles, include 2 high-quality, beginner-friendly articles.
-                For documentation, include 2 official or widely recognized documentation sources.
-                Make sure all URLs are valid and accessible.
-            """
-            
-            gemini_response = call_gemini_model(gemini_prompt)
-            gemini_data = json.loads(gemini_response)
-            
-            # Combine all resources
-            resources = {
-                'videos': videos,
-                'articles': gemini_data.get('articles', []),
-                'documentation': gemini_data.get('documentation', [])
-            }
-            
-            return JsonResponse({'resources': resources})
-            
-        except Exception as e:
-            logger.error(f"Error generating resources: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
-    
-    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_videos_for_topic(request):
     """Generate YouTube videos for a specific topic."""
