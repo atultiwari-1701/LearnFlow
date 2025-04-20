@@ -376,3 +376,184 @@ def generate_quiz(request):
 
 def test(request):
     return HttpResponse("Simple URL test: This is a test response.")
+
+def generate_resources_for_topic(request):
+    """Generate learning resources for a specific topic using Gemini and YouTube APIs."""
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            topic_name = data.get('topic_name', '')
+            subtopic_name = data.get('subtopic_name', '')
+            
+            if not topic_name:
+                return JsonResponse({'error': 'Topic name is required'}, status=400)
+            
+            # Generate YouTube videos
+            youtube_prompt = f"{f'{topic_name} {subtopic_name}' if subtopic_name else topic_name} tutorial"
+            youtube_results = search_youtube(next(_youtube_api_key_cycle), youtube_prompt)
+            
+            # Format YouTube results
+            videos = []
+            if youtube_results:
+                for video in youtube_results[:2]:  # Get top 2 videos
+                    # Extract video ID from the URL
+                    video_url = video.get('url', '')
+                    video_id = video_url.split('v=')[-1] if 'v=' in video_url else ''
+                    
+                    videos.append({
+                        'title': video.get('title', ''),
+                        'url': video_url,
+                        'duration': video.get('duration', ''),
+                        'thumbnail': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else ''
+                    })
+            
+            # Generate articles and documentation using Gemini
+            gemini_prompt = f"""
+                Generate a list of learning resources for {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
+                Return a JSON object with the following structure:
+                {{
+                    "articles": [
+                        {{
+                            "title": "article title",
+                            "url": "article url",
+                            "readTime": "estimated read time"
+                        }}
+                    ],
+                    "documentation": [
+                        {{
+                            "title": "documentation title",
+                            "url": "documentation url",
+                            "type": "documentation type"
+                        }}
+                    ]
+                }}
+                
+                For articles, include 2 high-quality, beginner-friendly articles.
+                For documentation, include 2 official or widely recognized documentation sources.
+                Make sure all URLs are valid and accessible.
+            """
+            
+            gemini_response = call_gemini_model(gemini_prompt)
+            gemini_data = json.loads(gemini_response)
+            
+            # Combine all resources
+            resources = {
+                'videos': videos,
+                'articles': gemini_data.get('articles', []),
+                'documentation': gemini_data.get('documentation', [])
+            }
+            
+            return JsonResponse({'resources': resources})
+            
+        except Exception as e:
+            logger.error(f"Error generating resources: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def generate_videos_for_topic(request):
+    """Generate YouTube videos for a specific topic."""
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            topic_name = data.get('topic_name', '')
+            subtopic_name = data.get('subtopic_name', '')
+            
+            if not topic_name:
+                return JsonResponse({'error': 'Topic name is required'}, status=400)
+            
+            # Generate YouTube videos
+            youtube_prompt = f"{f'{topic_name} {subtopic_name}' if subtopic_name else topic_name} tutorial"
+            youtube_results = search_youtube(next(_youtube_api_key_cycle), youtube_prompt)
+            
+            # Format YouTube results
+            videos = []
+            if youtube_results:
+                for video in youtube_results[:2]:  # Get top 2 videos
+                    video_url = video.get('url', '')
+                    video_id = video_url.split('v=')[-1] if 'v=' in video_url else ''
+                    
+                    videos.append({
+                        'title': video.get('title', ''),
+                        'url': video_url,
+                        'duration': video.get('duration', ''),
+                        'thumbnail': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else ''
+                    })
+            
+            return JsonResponse({'videos': videos})
+            
+        except Exception as e:
+            logger.error(f"Error generating videos: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def generate_articles_for_topic(request):
+    """Generate articles for a specific topic."""
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            topic_name = data.get('topic_name', '')
+            subtopic_name = data.get('subtopic_name', '')
+            
+            if not topic_name:
+                return JsonResponse({'error': 'Topic name is required'}, status=400)
+            
+            # Generate articles using Gemini
+            gemini_prompt = f"""
+                Generate 2 high-quality, beginner-friendly articles about {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
+                Return a JSON array with the following structure for each article:
+                {{
+                    "title": "article title",
+                    "url": "article url",
+                    "readTime": "estimated read time"
+                }}
+                
+                Make sure all URLs are valid and accessible.
+            """
+            
+            gemini_response = call_gemini_model(gemini_prompt)
+            articles = json.loads(gemini_response)
+            
+            return JsonResponse({'articles': articles})
+            
+        except Exception as e:
+            logger.error(f"Error generating articles: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+def generate_documentation_for_topic(request):
+    """Generate documentation for a specific topic."""
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            topic_name = data.get('topic_name', '')
+            subtopic_name = data.get('subtopic_name', '')
+            
+            if not topic_name:
+                return JsonResponse({'error': 'Topic name is required'}, status=400)
+            
+            # Generate documentation using Gemini
+            gemini_prompt = f"""
+                Generate 2 official or widely recognized documentation sources for {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
+                Return a JSON array with the following structure for each documentation:
+                {{
+                    "title": "documentation title",
+                    "url": "documentation url",
+                    "type": "documentation type"
+                }}
+                
+                Make sure all URLs are valid and accessible.
+            """
+            
+            gemini_response = call_gemini_model(gemini_prompt)
+            documentation = json.loads(gemini_response)
+            
+            return JsonResponse({'documentation': documentation})
+            
+        except Exception as e:
+            logger.error(f"Error generating documentation: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
