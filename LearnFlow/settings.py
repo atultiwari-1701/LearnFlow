@@ -150,7 +150,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     'https://learnflow-pjd3.onrender.com',
-    'http://127.0.0.1:8000'
+    'http://localhost:8080'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -176,7 +176,7 @@ CORS_ALLOW_HEADERS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://learnflow-pjd3.onrender.com',
-    'http://127.0.0.1:8000'
+    'http://localhost:8080'
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
