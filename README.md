@@ -126,7 +126,7 @@ python manage.py createsuperuser
 
 #### Sign Up
 ```http
-POST /auth/signup
+POST /authentication/signup
 Content-Type: application/json
 
 {
@@ -150,7 +150,7 @@ Returns:
 
 #### Login
 ```http
-POST /auth/login
+POST /authentication/login
 Content-Type: application/json
 
 {
@@ -184,7 +184,7 @@ The User model includes the following fields:
 
 #### Search for a Topic
 ```http
-POST /search
+POST /gemini-search/search
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -198,7 +198,7 @@ Returns comprehensive topic information including description, subtopics, roadma
 
 #### Generate Videos for Topic/Subtopic
 ```http
-POST /generate-topic-videos
+POST gemini-search/generate-topic-videos
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -211,7 +211,7 @@ Returns a list of relevant YouTube videos.
 
 #### Generate Articles for Topic/Subtopic
 ```http
-POST /generate-topic-articles
+POST gemini-search/generate-topic-articles
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -224,7 +224,7 @@ Returns a list of relevant articles.
 
 #### Generate Documentation for Topic/Subtopic
 ```http
-POST /generate-topic-documentation
+POST gemini-search/generate-topic-documentation
 Content-Type: application/json
 X-Requested-With: XMLHttpRequest
 
@@ -239,7 +239,7 @@ Returns a list of relevant documentation sources.
 
 #### Save Quiz Attempt
 ```http
-POST /quiz/save-attempt
+POST /quiz/save-quiz-attempt
 Content-Type: application/json
 
 {
@@ -267,7 +267,7 @@ Saves a quiz attempt with detailed scoring and timing information.
 
 #### Get Quiz History
 ```http
-GET /quiz/history?user_id=<user_id>
+GET /quiz/quiz-history?user_id=<user_id>
 ```
 Returns the user's quiz history with the following data for each quiz:
 ```json
