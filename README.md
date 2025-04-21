@@ -4,7 +4,7 @@ LearnFlow is a comprehensive learning platform that provides structured learning
 
 ## Repository
 ```bash
-git clone https://github.com/your-username/LearnFlow.git
+git clone https://github.com/atultiwari-1701/LearnFlow.git
 ```
 
 ## Setup Instructions
@@ -18,7 +18,7 @@ git clone https://github.com/your-username/LearnFlow.git
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/LearnFlow.git
+git clone https://github.com/atultiwari-1701/LearnFlow.git
 cd LearnFlow
 ```
 
