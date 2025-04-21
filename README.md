@@ -52,6 +52,51 @@ python manage.py runserver
 
 The server will start at `http://127.0.0.1:8000/`
 
+## Running the Project
+
+### Development Mode
+1. Start the Django development server:
+```bash
+python manage.py runserver
+```
+The API will be available at `http://127.0.0.1:8000/`
+
+2. For testing the API endpoints, you can use tools like:
+   - Postman
+   - cURL
+   - Browser Developer Tools
+
+### Production Mode
+1. Set up a production web server (e.g., Gunicorn):
+```bash
+pip install gunicorn
+gunicorn LearnFlow.wsgi:application
+```
+
+2. Configure a reverse proxy (e.g., Nginx) to handle static files and SSL.
+
+### Testing
+Run the test suite:
+```bash
+python manage.py test
+```
+
+### Database Management
+- Create migrations:
+```bash
+python manage.py makemigrations
+```
+
+- Apply migrations:
+```bash
+python manage.py migrate
+```
+
+- Create superuser (for admin access):
+```bash
+python manage.py createsuperuser
+```
+
 ## API Endpoints
 
 ### Search and Topic Generation
@@ -191,9 +236,22 @@ Error responses include a message explaining the error:
 
 1. Fork the repository
 2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+3. Install development dependencies:
+```bash
+pip install -r requirements.txt
+```
+4. Make your changes
+5. Run tests:
+```bash
+python manage.py test
+```
+6. Update dependencies (if you added new packages):
+```bash
+pip freeze > requirements.txt
+```
+7. Commit your changes
+8. Push to the branch
+9. Create a Pull Request
 
 ## License
 
