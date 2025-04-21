@@ -149,7 +149,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
-    'https://learnflow-x1le.onrender.com',
+    'https://learnflow-pjd3.onrender.com',
     'http://127.0.0.1:8000'
 ]
 
@@ -175,7 +175,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://learnflow-x1le.onrender.com',
+    'https://learnflow-pjd3.onrender.com',
     'http://127.0.0.1:8000'
 ]
 
