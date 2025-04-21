@@ -9,8 +9,9 @@ from google.genai import types
 from .youtube_api import search_youtube
 import logging
 import random
-from .models import QuizQuestion, Topic
+from .models import QuizQuestion, Topic, VideoResource, ArticleResource, DocumentationResource
 from itertools import cycle
+from django.db import transaction
 
 _gemini_api_key_cycle = cycle(settings.GEMINI_API_KEYS)
 _youtube_api_key_cycle = cycle(settings.YOUTUBE_API_KEYS)
@@ -334,7 +335,7 @@ def generate_quiz(request):
         return JsonResponse({'error': str(e)}, status=400)
 
 def generate_videos_for_topic(request):
-    """Generate YouTube videos for a specific topic."""
+    """Generate YouTube videos for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
             data = json.loads(request.body)
@@ -344,23 +345,50 @@ def generate_videos_for_topic(request):
             if not topic_name:
                 return JsonResponse({'error': 'Topic name is required'}, status=400)
             
-            # Generate YouTube videos
+            # Get or create the Topic object
+            topic, _ = Topic.objects.get_or_create(name=topic_name)
+            
+            # Check if videos already exist in database
+            existing_videos = VideoResource.objects.filter(
+                topic=topic,
+                subtopic=subtopic_name if subtopic_name else ''
+            )
+            
+            if existing_videos.exists():
+                videos = [{
+                    'title': video.title,
+                    'url': video.url,
+                    'duration': video.duration,
+                    'thumbnail': video.thumbnail
+                } for video in existing_videos]
+                return JsonResponse({'videos': videos})
+            
+            # Generate new videos if not in database
             youtube_prompt = f"{f'{topic_name} {subtopic_name}' if subtopic_name else topic_name} tutorial"
             youtube_results = search_youtube(next(_youtube_api_key_cycle), youtube_prompt)
             
-            # Format YouTube results
             videos = []
             if youtube_results:
-                for video in youtube_results[:2]:  # Get top 2 videos
-                    video_url = video.get('url', '')
-                    video_id = video_url.split('v=')[-1] if 'v=' in video_url else ''
-                    
-                    videos.append({
-                        'title': video.get('title', ''),
-                        'url': video_url,
-                        'duration': video.get('duration', ''),
-                        'thumbnail': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else ''
-                    })
+                with transaction.atomic():
+                    for video in youtube_results[:2]:  # Get top 2 videos
+                        video_url = video.get('url', '')
+                        video_id = video_url.split('v=')[-1] if 'v=' in video_url else ''
+                        
+                        video_data = {
+                            'title': video.get('title', ''),
+                            'url': video_url,
+                            'duration': video.get('duration', ''),
+                            'thumbnail': f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg" if video_id else ''
+                        }
+                        
+                        # Save to database
+                        VideoResource.objects.create(
+                            topic=topic,
+                            subtopic=subtopic_name if subtopic_name else '',
+                            **video_data
+                        )
+                        
+                        videos.append(video_data)
             
             return JsonResponse({'videos': videos})
             
@@ -371,7 +399,7 @@ def generate_videos_for_topic(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_articles_for_topic(request):
-    """Generate articles for a specific topic."""
+    """Generate articles for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
             data = json.loads(request.body)
@@ -381,7 +409,24 @@ def generate_articles_for_topic(request):
             if not topic_name:
                 return JsonResponse({'error': 'Topic name is required'}, status=400)
             
-            # Generate articles using Gemini
+            # Get or create the Topic object
+            topic, _ = Topic.objects.get_or_create(name=topic_name)
+            
+            # Check if articles already exist in database
+            existing_articles = ArticleResource.objects.filter(
+                topic=topic,
+                subtopic=subtopic_name if subtopic_name else ''
+            )
+            
+            if existing_articles.exists():
+                articles = [{
+                    'title': article.title,
+                    'url': article.url,
+                    'readTime': article.read_time
+                } for article in existing_articles]
+                return JsonResponse({'articles': articles})
+            
+            # Generate new articles if not in database
             gemini_prompt = f"""
                 Generate 2 high-quality, beginner-friendly articles about {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
                 Return a JSON array with the following structure for each article:
@@ -395,7 +440,24 @@ def generate_articles_for_topic(request):
             """
             
             gemini_response = call_gemini_model(gemini_prompt)
-            articles = json.loads(gemini_response)
+            articles_data = json.loads(gemini_response)
+            
+            # Save to database
+            articles = []
+            with transaction.atomic():
+                for article_data in articles_data:
+                    article = ArticleResource.objects.create(
+                        topic=topic,
+                        subtopic=subtopic_name if subtopic_name else '',
+                        title=article_data['title'],
+                        url=article_data['url'],
+                        read_time=article_data['readTime']
+                    )
+                    articles.append({
+                        'title': article.title,
+                        'url': article.url,
+                        'readTime': article.read_time
+                    })
             
             return JsonResponse({'articles': articles})
             
@@ -406,7 +468,7 @@ def generate_articles_for_topic(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_documentation_for_topic(request):
-    """Generate documentation for a specific topic."""
+    """Generate documentation for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
             data = json.loads(request.body)
@@ -416,7 +478,24 @@ def generate_documentation_for_topic(request):
             if not topic_name:
                 return JsonResponse({'error': 'Topic name is required'}, status=400)
             
-            # Generate documentation using Gemini
+            # Get or create the Topic object
+            topic, _ = Topic.objects.get_or_create(name=topic_name)
+            
+            # Check if documentation already exists in database
+            existing_docs = DocumentationResource.objects.filter(
+                topic=topic,
+                subtopic=subtopic_name if subtopic_name else ''
+            )
+            
+            if existing_docs.exists():
+                documentation = [{
+                    'title': doc.title,
+                    'url': doc.url,
+                    'type': doc.doc_type
+                } for doc in existing_docs]
+                return JsonResponse({'documentation': documentation})
+            
+            # Generate new documentation if not in database
             gemini_prompt = f"""
                 Generate 2 official or widely recognized documentation sources for {f'{topic_name} {subtopic_name}' if subtopic_name else topic_name}.
                 Return a JSON array with the following structure for each documentation:
@@ -430,7 +509,24 @@ def generate_documentation_for_topic(request):
             """
             
             gemini_response = call_gemini_model(gemini_prompt)
-            documentation = json.loads(gemini_response)
+            docs_data = json.loads(gemini_response)
+            
+            # Save to database
+            documentation = []
+            with transaction.atomic():
+                for doc_data in docs_data:
+                    doc = DocumentationResource.objects.create(
+                        topic=topic,
+                        subtopic=subtopic_name if subtopic_name else '',
+                        title=doc_data['title'],
+                        url=doc_data['url'],
+                        doc_type=doc_data['type']
+                    )
+                    documentation.append({
+                        'title': doc.title,
+                        'url': doc.url,
+                        'type': doc.doc_type
+                    })
             
             return JsonResponse({'documentation': documentation})
             

@@ -12,6 +12,61 @@ class Topic(models.Model):
             models.Index(fields=['name']),
         ]
 
+class VideoResource(models.Model):
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='videos')
+    subtopic = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=255)
+    url = models.URLField()
+    duration = models.CharField(max_length=20)
+    thumbnail = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['topic', 'subtopic']),
+        ]
+        unique_together = ['topic', 'subtopic', 'url']
+
+    def __str__(self):
+        return f"{self.title} - {self.topic.name}"
+
+class ArticleResource(models.Model):
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='articles')
+    subtopic = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=255)
+    url = models.URLField()
+    read_time = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['topic', 'subtopic']),
+        ]
+        unique_together = ['topic', 'subtopic', 'url']
+
+    def __str__(self):
+        return f"{self.title} - {self.topic.name}"
+
+class DocumentationResource(models.Model):
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='documentation')
+    subtopic = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=255)
+    url = models.URLField()
+    doc_type = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['topic', 'subtopic']),
+        ]
+        unique_together = ['topic', 'subtopic', 'url']
+
+    def __str__(self):
+        return f"{self.title} - {self.topic.name}"
+
 class QuizQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     QUESTION_TYPES = [
