@@ -241,94 +241,106 @@ def generate_quiz(request):
                 'message': 'Topic not found'
             }, status=404)
         
-        # Get existing questions for this topic and subtopic
-        questions = QuizQuestion.objects.filter(
-            topic=topic,
-            subtopic=subtopic,
-            question_type=question_type
-        )
+        # 50-50 chance to use database or Gemini
+        use_database = random.choice([True, False])
         
-        if questions.count() >= num_questions:
-            # If we have enough questions, randomly select from existing ones
-            selected_questions = random.sample(list(questions), num_questions)
-            questions_data = []
-            for q in selected_questions:
-                questions_data.append({
-                    'id': q.id,
-                    'question': q.question,
-                    'options': q.options,
-                    'correct_answers': q.correct_answers,
-                    'explanation': q.explanation,
-                    'question_type': q.question_type
-                })
-            return JsonResponse({'quiz': {'quiz': questions_data}})
-        
-        # If we don't have enough questions, generate new ones using Gemini
-        prompt = f"""
-            Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic_name}. 
-            The quiz should consist of {num_questions} questions. 
-            All questions should be of type '{question_type}'.
-            There should be only 4 options for mcq type and multiple-correct type questions and only 2 options for true-false type questions.
-            For each question, provide:
-                type: string;
-                question: string;
-                options: string[];
-                correctAnswers: number[];
-                explanation: string;
+        if use_database:
+            # Try to get questions from database first
+            questions = QuizQuestion.objects.filter(
+                topic=topic,
+                subtopic=subtopic,
+                question_type=question_type
+            )
             
-            Return the quiz in JSON format with a "quiz" key containing an array of questions.
-        """
-        
-        response_text = call_gemini_model(prompt)
-        quiz_data = eval(response_text)
-        
-        # Store new questions in database and collect their IDs
-        final_questions = []
-        for question in quiz_data["quiz"]:
-            try:
-                # Check if question already exists
-                existing_question = QuizQuestion.objects.filter(
-                    topic=topic,
-                    subtopic=subtopic,
-                    question_type=question_type,
-                    question=question["question"]
-                ).first()
-
-                if existing_question:
-                    # Use existing question with its ID
-                    final_questions.append({
-                        "id": existing_question.id,
-                        "type": existing_question.question_type,
-                        "question": existing_question.question,
-                        "options": existing_question.options,
-                        "correctAnswers": existing_question.correct_answers,
-                        "explanation": existing_question.explanation
-                    })
+            if questions.exists():
+                # If we have questions in database, use them
+                if questions.count() >= num_questions:
+                    # If we have enough questions, randomly select from existing ones
+                    selected_questions = random.sample(list(questions), num_questions)
+                    questions_data = []
+                    for q in selected_questions:
+                        questions_data.append({
+                            'id': q.id,
+                            'question': q.question,
+                            'options': q.options,
+                            'correct_answers': q.correct_answers,
+                            'explanation': q.explanation,
+                            'question_type': q.question_type
+                        })
+                    return JsonResponse({'quiz': {'quiz': questions_data}})
                 else:
-                    # Create new question and get its ID
-                    new_question = QuizQuestion.objects.create(
-                        topic=topic,
-                        subtopic=subtopic,
-                        question_type=question_type,
-                        question=question["question"],
-                        options=question["options"],
-                        correct_answers=question["correctAnswers"],
-                        explanation=question["explanation"],
-                        source="gemini"
-                    )
-                    final_questions.append({
-                        "id": new_question.id,
-                        "type": new_question.question_type,
-                        "question": new_question.question,
-                        "options": new_question.options,
-                        "correctAnswers": new_question.correct_answers,
-                        "explanation": new_question.explanation
-                    })
-            except Exception as e:
-                logger.warning(f"Error processing question: {e}")
-                continue
+                    # If we don't have enough questions, fall back to Gemini
+                    logger.info(f"Database has {questions.count()} questions, falling back to Gemini for {num_questions} questions")
+                    use_database = False
         
-        return JsonResponse({'quiz': {"quiz": final_questions}})
+        if not use_database:
+            # Generate new questions using Gemini
+            prompt = f"""
+                Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic_name}. 
+                The quiz should consist of {num_questions} questions. 
+                All questions should be of type '{question_type}'.
+                There should be only 4 options for mcq type and multiple-correct type questions and only 2 options for true-false type questions.
+                For each question, provide:
+                    type: string;
+                    question: string;
+                    options: string[];
+                    correctAnswers: number[];
+                    explanation: string;
+                
+                Return the quiz in JSON format with a "quiz" key containing an array of questions.
+            """
+            
+            response_text = call_gemini_model(prompt)
+            quiz_data = eval(response_text)
+            
+            # Store new questions in database and collect their IDs
+            final_questions = []
+            with transaction.atomic():
+                for question in quiz_data["quiz"]:
+                    try:
+                        # Check if question already exists
+                        existing_question = QuizQuestion.objects.filter(
+                            topic=topic,
+                            subtopic=subtopic,
+                            question_type=question_type,
+                            question=question["question"]
+                        ).first()
+
+                        if existing_question:
+                            # Use existing question with its ID
+                            final_questions.append({
+                                "id": existing_question.id,
+                                "type": existing_question.question_type,
+                                "question": existing_question.question,
+                                "options": existing_question.options,
+                                "correctAnswers": existing_question.correct_answers,
+                                "explanation": existing_question.explanation
+                            })
+                        else:
+                            # Create new question and get its ID
+                            new_question = QuizQuestion.objects.create(
+                                topic=topic,
+                                subtopic=subtopic,
+                                question_type=question_type,
+                                question=question["question"],
+                                options=question["options"],
+                                correct_answers=question["correctAnswers"],
+                                explanation=question["explanation"],
+                                source="gemini"
+                            )
+                            final_questions.append({
+                                "id": new_question.id,
+                                "type": new_question.question_type,
+                                "question": new_question.question,
+                                "options": new_question.options,
+                                "correctAnswers": new_question.correct_answers,
+                                "explanation": new_question.explanation
+                            })
+                    except Exception as e:
+                        logger.warning(f"Error processing question: {e}")
+                        continue
+            
+            return JsonResponse({'quiz': {"quiz": final_questions}})
 
     except Exception as e:
         logger.error(f"Error generating quiz: {e}")
