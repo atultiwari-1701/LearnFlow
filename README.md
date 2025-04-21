@@ -2,6 +2,11 @@
 
 LearnFlow is a comprehensive learning platform that provides structured learning paths, resources, and quizzes for various technical topics.
 
+## Repository
+```bash
+git clone https://github.com/your-username/LearnFlow.git
+```
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -13,7 +18,7 @@ LearnFlow is a comprehensive learning platform that provides structured learning
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/LearnFlow.git
 cd LearnFlow
 ```
 
@@ -36,8 +41,26 @@ pip install -r requirements.txt
 4. Set up environment variables:
 Create a `.env` file in the root directory with the following variables:
 ```env
-GEMINI_API_KEYS=your_gemini_api_key1,your_gemini_api_key2
-YOUTUBE_API_KEYS=your_youtube_api_key1,your_youtube_api_key2
+# Gemini API Keys
+GEMINI_KEY_1=your_gemini_api_key1
+GEMINI_KEY_2=your_gemini_api_key2
+
+# YouTube API Keys
+YOUTUBE_KEY_1=your_youtube_api_key1
+YOUTUBE_KEY_2=your_youtube_api_key2
+```
+
+Then, update the `settings.py` file to include these keys:
+```python
+GEMINI_API_KEYS = [
+    os.getenv('GEMINI_KEY_1'),
+    os.getenv('GEMINI_KEY_2')
+]
+
+YOUTUBE_API_KEYS = [
+    os.getenv('YOUTUBE_KEY_1'),
+    os.getenv('YOUTUBE_KEY_2')
+]
 ```
 
 5. Run migrations:
@@ -99,6 +122,31 @@ python manage.py createsuperuser
 
 ## API Endpoints
 
+### Authentication
+
+#### Sign Up
+```http
+POST /auth/signup
+Content-Type: application/json
+
+{
+    "username": "user123",
+    "email": "user@example.com",
+    "password": "securepassword"
+}
+```
+
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+    "username": "user123",
+    "password": "securepassword"
+}
+```
+
 ### Search and Topic Generation
 
 #### Search for a Topic
@@ -154,7 +202,7 @@ X-Requested-With: XMLHttpRequest
 ```
 Returns a list of relevant documentation sources.
 
-### Quiz Generation
+### Quiz Management
 
 #### Generate Quiz
 ```http
@@ -169,6 +217,25 @@ Content-Type: application/json
 }
 ```
 Returns a quiz with the specified number of questions.
+
+#### Get User's Quiz History
+```http
+GET /quiz/history
+Authorization: Bearer <token>
+
+{
+    "page": 1,           // Optional, default: 1
+    "page_size": 10      // Optional, default: 10
+}
+```
+Returns the user's quiz history with pagination.
+
+#### Get Quiz Results
+```http
+GET /quiz/results/{quiz_id}
+Authorization: Bearer <token>
+```
+Returns detailed results for a specific quiz.
 
 ## Database Models
 
@@ -216,12 +283,16 @@ Returns a quiz with the specified number of questions.
 - Database caching for faster responses
 - Support for multiple API keys (Gemini, YouTube)
 - Error handling and logging
+- User authentication and authorization
+- Quiz history tracking
 
 ## Error Handling
 
 All endpoints return appropriate HTTP status codes:
 - 200: Success
 - 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
 - 404: Not Found
 - 500: Internal Server Error
 
