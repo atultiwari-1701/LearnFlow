@@ -130,9 +130,21 @@ POST /auth/signup
 Content-Type: application/json
 
 {
-    "username": "user123",
     "email": "user@example.com",
-    "password": "securepassword"
+    "password": "securepassword",
+    "name": "John Doe"  // Optional
+}
+```
+Returns:
+```json
+{
+    "status": "success",
+    "message": "User created successfully",
+    "user": {
+        "id": "user_id",
+        "email": "user@example.com",
+        "name": "John Doe"
+    }
 }
 ```
 
@@ -142,10 +154,31 @@ POST /auth/login
 Content-Type: application/json
 
 {
-    "username": "user123",
+    "email": "user@example.com",
     "password": "securepassword"
 }
 ```
+Returns:
+```json
+{
+    "status": "success",
+    "message": "Login successful",
+    "user": {
+        "id": "user_id",
+        "email": "user@example.com",
+        "name": "John Doe"
+    }
+}
+```
+
+### User Model
+The User model includes the following fields:
+- `id`: AutoField (primary key)
+- `email`: EmailField (unique)
+- `password`: CharField (hashed)
+- `name`: CharField (optional)
+- `created_at`: DateTimeField (auto_now_add)
+- `updated_at`: DateTimeField (auto_now)
 
 ### Search and Topic Generation
 
@@ -204,38 +237,96 @@ Returns a list of relevant documentation sources.
 
 ### Quiz Management
 
-#### Generate Quiz
+#### Save Quiz Attempt
 ```http
-POST /generate-quiz
+POST /quiz/save-attempt
 Content-Type: application/json
 
 {
+    "user_id": "user_id",
+    "total_time_taken": 1200,  // in seconds
+    "score": 32,
+    "correct_attempts": 8,
+    "incorrect_attempts": 2,
+    "partial_attempts": 0,
+    "unattempted": 0,
+    "is_negative_marking": false,
     "topic": "Python",
-    "subtopic": "Variables",  // Optional
-    "question_type": "mcq",   // Options: "mcq", "true-false", "multiple-correct"
-    "num_questions": 10       // Optional, default: 10
+    "subtopic": "Variables",
+    "question_attempts": [
+        {
+            "question_id": 1,
+            "time_taken": 45,
+            "attempted_options": [0, 2]
+        },
+        // ... more question attempts
+    ]
 }
 ```
-Returns a quiz with the specified number of questions.
+Saves a quiz attempt with detailed scoring and timing information.
 
-#### Get User's Quiz History
+#### Get Quiz History
 ```http
-GET /quiz/history
-Authorization: Bearer <token>
-
+GET /quiz/history?user_id=<user_id>
+```
+Returns the user's quiz history with the following data for each quiz:
+```json
 {
-    "page": 1,           // Optional, default: 1
-    "page_size": 10      // Optional, default: 10
+    "status": "success",
+    "quizzes": [
+        {
+            "id": "quiz_id",
+            "topic": "Python",
+            "subtopic": "Variables",
+            "date": "2024-04-21",
+            "percentage": 80.0,
+            "total_possible_score": 40,
+            "score": 32,
+            "timeSpent": 1200,
+            "negativeMarking": false,
+            "question_type": "mcq",
+            "questions": [
+                {
+                    "question": "What is a variable?",
+                    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+                    "correctAnswers": [0],
+                    "selectedAnswers": [0],
+                    "isCorrect": true,
+                    "partiallyCorrect": false,
+                    "timeTaken": 45,
+                    "score": 4,
+                    "explanation": "Variables are used to store data..."
+                }
+                // ... more questions
+            ]
+        }
+        // ... more quizzes
+    ]
 }
 ```
-Returns the user's quiz history with pagination.
 
-#### Get Quiz Results
-```http
-GET /quiz/results/{quiz_id}
-Authorization: Bearer <token>
-```
-Returns detailed results for a specific quiz.
+### Quiz Scoring System
+
+The quiz system uses the following scoring rules:
+
+1. **Multiple Choice Questions (MCQ)**
+   - Correct answer: +4 points
+   - Incorrect answer with negative marking: -1 point
+   - Incorrect answer without negative marking: 0 points
+   - Unattempted: 0 points
+
+2. **Multiple Correct Questions**
+   - All correct options selected: +4 points
+   - Partial correct (some correct options selected): +1 point per correct option
+   - Incorrect options selected with negative marking: -2 points
+   - Incorrect options selected without negative marking: 0 points
+   - Unattempted: 0 points
+
+3. **True/False Questions**
+   - Correct answer: +4 points
+   - Incorrect answer with negative marking: -1 point
+   - Incorrect answer without negative marking: 0 points
+   - Unattempted: 0 points
 
 ## Database Models
 
