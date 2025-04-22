@@ -265,7 +265,7 @@ def generate_quiz(request):
                             'options': q.options,
                             'correct_answers': q.correct_answers,
                             'explanation': q.explanation,
-                            'question_type': q.question_type
+                            'type': q.question_type
                         })
                     return JsonResponse({'quiz': {'quiz': questions_data}})
                 else:
@@ -284,7 +284,7 @@ def generate_quiz(request):
                     type: string;
                     question: string;
                     options: string[];
-                    correctAnswers: number[];
+                    correct_answers: number[];
                     explanation: string;
                 
                 Return the quiz in JSON format with a "quiz" key containing an array of questions.
@@ -313,7 +313,7 @@ def generate_quiz(request):
                                 "type": existing_question.question_type,
                                 "question": existing_question.question,
                                 "options": existing_question.options,
-                                "correctAnswers": existing_question.correct_answers,
+                                "correct_answers": existing_question.correct_answers,
                                 "explanation": existing_question.explanation
                             })
                         else:
@@ -324,7 +324,7 @@ def generate_quiz(request):
                                 question_type=question_type,
                                 question=question["question"],
                                 options=question["options"],
-                                correct_answers=question["correctAnswers"],
+                                correct_answers=question["correct_answers"],
                                 explanation=question["explanation"],
                                 source="gemini"
                             )
@@ -333,7 +333,7 @@ def generate_quiz(request):
                                 "type": new_question.question_type,
                                 "question": new_question.question,
                                 "options": new_question.options,
-                                "correctAnswers": new_question.correct_answers,
+                                "correct_answers": new_question.correct_answers,
                                 "explanation": new_question.explanation
                             })
                     except Exception as e:
