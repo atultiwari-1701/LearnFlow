@@ -8,7 +8,6 @@ class QuizAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     total_time_taken = models.IntegerField(help_text="Total time taken in seconds")
-    score = models.IntegerField()
     correct_attempts = models.IntegerField()
     incorrect_attempts = models.IntegerField()
     partial_attempts = models.IntegerField()
@@ -43,6 +42,14 @@ class QuizAttempt(models.Model):
         if self.total_possible_score == 0 or self.score < 0:
             return 0
         return round((self.score / self.total_possible_score) * 100, 2)
+    
+    @property
+    def score(self):
+        """Calculate total score based on question attempts"""
+        total_score = 0
+        for question_attempt in self.question_attempts.all():
+            total_score += question_attempt.score
+        return total_score
 
 class QuestionAttempt(models.Model):
     quiz_attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='question_attempts')

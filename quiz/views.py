@@ -8,6 +8,11 @@ from authentication.models import User
 
 # Create your views here.
 def save_quiz_attempt(request):
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
     # Check if request method is POST
     if request.method != 'POST':
         return JsonResponse({
@@ -19,7 +24,7 @@ def save_quiz_attempt(request):
         data = json.loads(request.body)
         
         # Validate required fields
-        required_fields = ['user_id', 'total_time_taken', 'score', 'correct_attempts', 
+        required_fields = ['total_time_taken', 'correct_attempts', 
                             'incorrect_attempts', 'partial_attempts', 'unattempted', 
                             'topic', 'subtopic', 'question_attempts']
         
@@ -42,9 +47,8 @@ def save_quiz_attempt(request):
         
         # Create the quiz attempt
         quiz_attempt = QuizAttempt.objects.create(
-            user_id=data['user_id'],
+            user_id=request.session.get('user_id'),  # Assuming user_id is stored in session
             total_time_taken=data['total_time_taken'],
-            score=data['score'],
             correct_attempts=data['correct_attempts'],
             incorrect_attempts=data['incorrect_attempts'],
             partial_attempts=data['partial_attempts'],
@@ -83,9 +87,15 @@ def get_quiz_history(request):
     """
     Returns quiz history data in the format matching SAMPLE_QUIZZES from the frontend
     """
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
+
     try:
         # Get user_id from query parameters
-        user_id = request.GET.get('user_id')
+        user_id = request.session.get('user_id')
         if not user_id:
             return JsonResponse({
                 'status': 'error',
