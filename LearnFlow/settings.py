@@ -150,7 +150,8 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     'https://learnflow-pjd3.onrender.com',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'https://www.learnflow.run.place'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -176,15 +177,14 @@ CORS_ALLOW_HEADERS = [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://learnflow-pjd3.onrender.com',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'https://www.learnflow.run.place'
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_COOKIE_SECURE = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = os.environ.get('IS_HTTP') == 'True'
 SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN')
-print(SESSION_COOKIE_DOMAIN)
