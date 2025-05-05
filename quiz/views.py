@@ -216,7 +216,9 @@ def get_questions_for_quiz_attempt(request, quiz_attempt_id):
             'questions': questions_data,
             'page': page_number,
             'num_pages': paginator.num_pages,
-            'total_questions': paginator.count
+            'total_questions': paginator.count,
+            'score': quiz_attempt.score,
+            'total_possible_score': quiz_attempt.total_possible_score
         })
     except Exception as e:
         return JsonResponse({
@@ -300,7 +302,9 @@ def get_quizzes_for_topic(request, topic_id):
                 'subtopic': attempt.subtopic,
                 'date': attempt.created_at.strftime('%Y-%m-%d'),
                 'timeSpent': attempt.total_time_taken,
-                'percentage': attempt.score_percentage
+                'percentage': attempt.score_percentage,
+                'score': attempt.score,
+                'total_possible_score': attempt.total_possible_score
             }
             quiz_history.append(quiz_data)
         return JsonResponse({
