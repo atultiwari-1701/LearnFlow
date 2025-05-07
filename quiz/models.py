@@ -15,6 +15,7 @@ class QuizAttempt(models.Model):
     is_negative_marking = models.BooleanField(default=False, help_text="Whether negative marking was enabled for this quiz")
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='quiz_attempts')
     subtopic = models.CharField(max_length=255, help_text="Subtopic of the quiz", blank=True)
+    score = models.IntegerField(default=0, help_text="Total score for this quiz attempt")
 
     class Meta:
         ordering = ['-created_at']
@@ -42,14 +43,7 @@ class QuizAttempt(models.Model):
         if self.total_possible_score == 0 or self.score < 0:
             return 0
         return round((self.score / self.total_possible_score) * 100, 2)
-    
-    @property
-    def score(self):
-        """Calculate total score based on question attempts"""
-        total_score = 0
-        for question_attempt in self.question_attempts.all():
-            total_score += question_attempt.score
-        return total_score
+
 
 class QuestionAttempt(models.Model):
     quiz_attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='question_attempts')

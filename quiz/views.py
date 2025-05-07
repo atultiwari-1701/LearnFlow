@@ -272,9 +272,13 @@ def get_topics_paginated(request):
 # --- View 2: Paginated Quizzes for Topic ---
 def get_quizzes_for_topic(request, topic_id):
     """
-    Returns paginated quizzes for a specific topic (4 per page)
+    Returns paginated quizzes for a specific topic (5 per page).
+    Optimized to minimize DB hits using select_related and user_id filter.
     Query param: page (default=1)
+    Response keys: id, topic, subtopic, date, timeSpent, percentage, score, total_possible_score
+    Returns 404 if topic does not exist, 401 if user not logged in.
     """
+    # Optional: To further optimize, consider adding a DB index on (user, topic, created_at) in QuizAttempt.Meta
     if request.session.get('user_id') is None:
         return JsonResponse({
             'status': 'error',
@@ -285,13 +289,13 @@ def get_quizzes_for_topic(request, topic_id):
         if page_number < 1:
             page_number = 1
         user_id = request.session.get('user_id')
-        user = User.objects.get(id=user_id)
         # Validate topic
         try:
             topic = Topic.objects.get(id=topic_id)
         except Topic.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Topic not found'}, status=404)
-        quizzes = QuizAttempt.objects.filter(user=user, topic=topic).order_by('-created_at')
+        # Use select_related to avoid repeated topic DB access, filter by user_id
+        quizzes = QuizAttempt.objects.filter(user_id=user_id, topic=topic).select_related('topic').order_by('-created_at')
         paginator = Paginator(quizzes, 5)
         page = paginator.get_page(page_number)
         quiz_history = []
@@ -371,19 +375,25 @@ def save_quiz_attempt(request):
             subtopic=data['subtopic']
         )
         
-        # Create question attempts
+        # Create question attempts and calculate score
+        total_score = 0
         for question_data in data['question_attempts']:
             try:
                 question = QuizQuestion.objects.get(id=question_data['question_id'])
-                QuestionAttempt.objects.create(
+                qa = QuestionAttempt.objects.create(
                     quiz_attempt=quiz_attempt,
                     question=question,
                     time_taken=question_data['time_taken'],
                     attempted_options=question_data['attempted_options']
                 )
+                total_score += qa.score
             except QuizQuestion.DoesNotExist:
                 # Skip if question doesn't exist
                 continue
+        
+        # Update the score field
+        quiz_attempt.score = total_score
+        quiz_attempt.save(update_fields=["score"])
         
         return JsonResponse({
             'status': 'success',
