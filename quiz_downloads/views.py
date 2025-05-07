@@ -70,6 +70,11 @@ def store_quiz_download_files(request):
                 super().__init__(buf.getvalue())
                 self.name = name
         quiz_file = InMemoryUploadedFile(zip_buffer, zip_filename)
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid file type'
+        }, status=400)
 
     try:
         upload_file_to_supabase(quiz_file, file_path)
