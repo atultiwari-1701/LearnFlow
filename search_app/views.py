@@ -284,6 +284,7 @@ def generate_quiz(request):
                 The quiz should consist of {num_questions} questions.
                 All questions should be of type '{question_type}'.
                 There should be only 4 options for mcq type and multiple-correct type questions and only 2 options for true-false type questions.
+                There should be only 1 correct answer for true-false type and mcq type questions and 1 or more correct answers for multiple-correct type questions.
                 For each question, provide:
                     type: string;
                     question: string;
