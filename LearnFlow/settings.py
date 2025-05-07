@@ -38,6 +38,11 @@ GEMINI_API_KEYS = [os.environ.get('GEMINI_API_KEY_1'), os.environ.get('GEMINI_AP
 YOUTUBE_API_KEYS = [os.environ.get('YOUTUBE_API_KEY_1'), os.environ.get('YOUTUBE_API_KEY_2'), os.environ.get('YOUTUBE_API_KEY_3'), os.environ.get('YOUTUBE_API_KEY_4')]
 # print(f"YOUTUBE_API_KEY: {YOUTUBE_API_KEYS}") #Add this line.
 
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+
+SUPABASE_MEDIA_BUCKET = os.environ.get('SUPABASE_MEDIA_BUCKET')
+
 
 # Application definition
 
@@ -52,6 +57,7 @@ INSTALLED_APPS = [
     'authentication',
     'quiz',
     'corsheaders',
+    'quiz_downloads',
 ]
 
 MIDDLEWARE = [

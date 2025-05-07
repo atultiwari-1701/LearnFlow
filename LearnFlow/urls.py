@@ -26,4 +26,5 @@ urlpatterns = [
     path('gemini-search/', include('search_app.urls')),
     path('authentication/', include('authentication.urls')),
     path('quiz/', include('quiz.urls')),
+    path('quiz-downloads/', include('quiz_downloads.urls')),
 ]
