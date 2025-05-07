@@ -94,6 +94,8 @@ class QuestionAttempt(models.Model):
             # If any incorrect option is selected, return -2
             if self.quiz_attempt.is_negative_marking and incorrect_selections > 0:
                 return -2
+            if incorrect_selections > 0:
+                return 0
             
             # Count correct selections
             correct_selections = len(correct_options.intersection(attempted))
