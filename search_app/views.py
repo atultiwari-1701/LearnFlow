@@ -222,9 +222,13 @@ def search_gemini(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_quiz(request):
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
-    
     try:
         data = json.loads(request.body)
         topic_name = data.get('topic')
@@ -276,8 +280,8 @@ def generate_quiz(request):
         if not use_database:
             # Generate new questions using Gemini
             prompt = f"""
-                Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic_name}. 
-                The quiz should consist of {num_questions} questions. 
+                Create a quiz on the {'subtopic of ' + subtopic + ' within the broader topic of ' if subtopic else 'topic of '}{topic_name}.
+                The quiz should consist of {num_questions} questions.
                 All questions should be of type '{question_type}'.
                 There should be only 4 options for mcq type and multiple-correct type questions and only 2 options for true-false type questions.
                 For each question, provide:
@@ -289,10 +293,8 @@ def generate_quiz(request):
                 
                 Return the quiz in JSON format with a "quiz" key containing an array of questions.
             """
-            
             response_text = call_gemini_model(prompt)
             quiz_data = eval(response_text)
-            
             # Store new questions in database and collect their IDs
             final_questions = []
             with transaction.atomic():
@@ -305,7 +307,6 @@ def generate_quiz(request):
                             question_type=question_type,
                             question=question["question"]
                         ).first()
-
                         if existing_question:
                             # Use existing question with its ID
                             final_questions.append({
@@ -339,14 +340,20 @@ def generate_quiz(request):
                     except Exception as e:
                         logger.warning(f"Error processing question: {e}")
                         continue
-            
             return JsonResponse({'quiz': {"quiz": final_questions}})
-
     except Exception as e:
         logger.error(f"Error generating quiz: {e}")
         return JsonResponse({'error': str(e)}, status=400)
+    # Safety net: should never be reached
+    return JsonResponse({'error': 'Unexpected error in generate_quiz'}, status=500)
+
 
 def generate_videos_for_topic(request):
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
     """Generate YouTube videos for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
@@ -411,6 +418,11 @@ def generate_videos_for_topic(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_articles_for_topic(request):
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
     """Generate articles for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
@@ -480,6 +492,11 @@ def generate_articles_for_topic(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def generate_documentation_for_topic(request):
+    if request.session.get('user_id') is None:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'User not logged in'
+        }, status=401)
     """Generate documentation for a specific topic or subtopic."""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
