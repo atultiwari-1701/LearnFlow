@@ -27,6 +27,22 @@ def upload_file_to_supabase(file, file_path):
         raise Exception("Supabase storages limits exceeded, no more buckets available")
 
     bucket_name = settings.SUPABASE_MEDIA_BUCKET
+
+    # Check if bucket exists and create it if it doesn't
+    if not cache.get("bucket_exists"):
+        try:
+            buckets_response = supabase.storage.list_buckets()
+            if buckets_response.get("error"):
+                raise Exception(f"Error listing buckets: {buckets_response['error']['message']}")
+
+            buckets = buckets_response.get("data", [])
+            if not any(bucket['name'] == bucket_name for bucket in buckets):
+                create_response = supabase.storage.create_bucket(bucket_name)
+                if create_response.get("error"):
+                    raise Exception(f"Error creating bucket: {create_response['error']['message']}")
+        except Exception as e:
+            raise Exception(f"Failed to check/create bucket '{bucket_name}': {str(e)}")
+        cache.set("bucket_exists", True, timeout=None)  # Cache the bucket existence
     
     try:
         # Upload file directly without reading into memory
