@@ -1,7 +1,10 @@
 from supabase import create_client
 from django.conf import settings
+from django.core.cache import cache
 
-SUPABASE_URL = settings.SUPABASE_URL
-SUPABASE_KEY = settings.SUPABASE_KEY
+SUPABASE_STORAGES = settings.SUPABASE_STORAGES
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+def get_supabase_client(index: int):
+    if index >= len(SUPABASE_STORAGES):
+        return None
+    return create_client(SUPABASE_STORAGES[index]['SUPABASE_URL'], SUPABASE_STORAGES[index]['SUPABASE_KEY'])

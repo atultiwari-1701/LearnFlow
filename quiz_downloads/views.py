@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import os
-from .helpers import upload_file_to_supabase, get_cached_signed_url
+from .helpers import upload_file_to_supabase
 from .models import QuizDownload
 
 # Create your views here.
@@ -61,7 +61,8 @@ def store_quiz_download_files(request):
         }, status=400)
 
     try:
-        upload_file_to_supabase(quiz_file, file_path)
+        supabase_index = upload_file_to_supabase(quiz_file, file_path)
+        quiz_download.storage_index = supabase_index
     except Exception as e:
         return JsonResponse({
             'status': 'error',

@@ -38,8 +38,15 @@ GEMINI_API_KEYS = [os.environ.get('GEMINI_API_KEY_1'), os.environ.get('GEMINI_AP
 YOUTUBE_API_KEYS = [os.environ.get('YOUTUBE_API_KEY_1'), os.environ.get('YOUTUBE_API_KEY_2'), os.environ.get('YOUTUBE_API_KEY_3'), os.environ.get('YOUTUBE_API_KEY_4')]
 # print(f"YOUTUBE_API_KEY: {YOUTUBE_API_KEYS}") #Add this line.
 
-SUPABASE_URL = os.environ.get('SUPABASE_URL')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_INDEXES = os.environ.get('SUPABASE_INDEXES')
+SUPABASE_INDEXES = SUPABASE_INDEXES.split(',') if SUPABASE_INDEXES else []
+
+SUPABASE_STORAGES = []
+for index in SUPABASE_INDEXES:
+    SUPABASE_STORAGES.append({
+        'SUPABASE_URL': os.environ.get(f'SUPABASE_URL_{index}'),
+        'SUPABASE_KEY': os.environ.get(f'SUPABASE_KEY_{index}'),
+    })
 
 SUPABASE_MEDIA_BUCKET = os.environ.get('SUPABASE_MEDIA_BUCKET')
 
@@ -109,6 +116,17 @@ DATABASES = {
         'PORT': os.environ.get('POSTGRES_PORT'),
     }
 }
+
+# CACHES = {
+#     "default": {
+#         "BACKEND": os.environ.get('CACHE_BACKEND'),
+#         "LOCATION": os.environ.get('CACHE_LOCATION'),
+#         "TIMEOUT": None,
+#         "OPTIONS": {
+#             "CLIENT_CLASS": os.environ.get('CACHE_CLIENT_CLASS'),
+#         }
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

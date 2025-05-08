@@ -12,6 +12,7 @@ class QuizDownload(models.Model):
     user_attempt_pdf = models.CharField(max_length=255, blank=True, null=True)
     report_pdf = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    storage_index = models.IntegerField(default=0, help_text="Index of the file in storage")
 
     def __str__(self):
         return f"Download for attempt {self.quiz_attempt}"
