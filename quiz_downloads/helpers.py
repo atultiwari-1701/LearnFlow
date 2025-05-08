@@ -31,12 +31,8 @@ def upload_file_to_supabase(file, file_path):
     # Check if bucket exists and create it if it doesn't
     if not cache.get("bucket_exists"):
         try:
-            buckets_response = supabase.storage.list_buckets()
-            if buckets_response.get("error"):
-                raise Exception(f"Error listing buckets: {buckets_response['error']['message']}")
-
-            buckets = buckets_response.get("data", [])
-            if not any(bucket['name'] == bucket_name for bucket in buckets):
+            buckets = supabase.storage.list_buckets()
+            if not any(bucket.name == bucket_name for bucket in buckets):
                 create_response = supabase.storage.create_bucket(bucket_name)
                 if create_response.get("error"):
                     raise Exception(f"Error creating bucket: {create_response['error']['message']}")
