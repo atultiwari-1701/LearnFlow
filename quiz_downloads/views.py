@@ -52,24 +52,8 @@ def store_quiz_download_files(request):
         elif file_extension == '.pdf':
             quiz_download.user_attempt_pdf = file_path
     elif filename.endswith('report_card'):
-        import io
-        import zipfile
-        # Prepare zip file in memory
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            # Add the uploaded file to the zip
-            zip_file.writestr(original_filename, quiz_file.read())
-        zip_buffer.seek(0)
-        # Name for the zip file
-        zip_filename = f"{filename}.zip"
-        file_path = f"quiz_downloads/{quiz_attempt_id}/report_card/{zip_filename}"
+        file_path = f"quiz_downloads/{quiz_attempt_id}/report_card/{original_filename}"
         quiz_download.report_pdf = file_path
-        # Prepare file-like object for upload
-        class InMemoryUploadedFile(io.BytesIO):
-            def __init__(self, buf, name):
-                super().__init__(buf.getvalue())
-                self.name = name
-        quiz_file = InMemoryUploadedFile(zip_buffer, zip_filename)
     else:
         return JsonResponse({
             'status': 'error',
