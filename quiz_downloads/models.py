@@ -14,5 +14,10 @@ class QuizDownload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     storage_index = models.IntegerField(default=0, help_text="Index of the file in storage")
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['quiz_attempt'])
+        ]
+
     def __str__(self):
         return f"Download for attempt {self.quiz_attempt}"

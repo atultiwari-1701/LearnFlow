@@ -3,8 +3,45 @@ from django.http import JsonResponse
 import os
 from .helpers import upload_file_to_supabase
 from .models import QuizDownload
+from .supabase_client import get_supabase_client
+from django.conf import settings
 
 # Create your views here.
+
+def get_quiz_download_presigned_url(request):
+    """
+    Returns a presigned URL for a quiz download file, expiring in 10 minutes (600 seconds).
+    Expects GET params: quiz_attempt_id, file_type (one of: questions_txt, questions_pdf, answers_txt, answers_pdf, user_attempt_txt, user_attempt_pdf, report_pdf)
+    """
+    if request.method != 'GET':
+        return JsonResponse({'status': 'error', 'message': 'Only GET allowed'}, status=405)
+    quiz_attempt_id = request.GET.get('quiz_attempt_id')
+    file_type = request.GET.get('file_type')
+    valid_types = [
+        'questions_txt', 'questions_pdf', 'answers_txt', 'answers_pdf',
+        'user_attempt_txt', 'user_attempt_pdf', 'report_pdf'
+    ]
+    if not quiz_attempt_id or not file_type or file_type not in valid_types:
+        return JsonResponse({'status': 'error', 'message': 'Missing or invalid params'}, status=400)
+    try:
+        quiz_download = QuizDownload.objects.get(quiz_attempt_id=quiz_attempt_id)
+        file_path = getattr(quiz_download, file_type)
+        if not file_path:
+            return JsonResponse({'status': 'error', 'message': 'File not found for this attempt/type'}, status=404)
+        supabase_index = quiz_download.storage_index
+        supabase = get_supabase_client(supabase_index)
+        bucket_name = settings.SUPABASE_MEDIA_BUCKET
+        expires_in = 600  # 10 min
+        resp = supabase.storage.from_(bucket_name).create_signed_url(file_path, expires_in)
+        signed_url = resp.get('signedURL') or resp.get('signed_url')
+        if not signed_url:
+            return JsonResponse({'status': 'error', 'message': 'Could not generate signed URL'}, status=500)
+        return JsonResponse({'status': 'success', 'signed_url': signed_url, 'expires_in': expires_in})
+    except QuizDownload.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'QuizDownload not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 def store_quiz_download_files(request):
     if request.session.get('user_id') is None:
         return JsonResponse({
