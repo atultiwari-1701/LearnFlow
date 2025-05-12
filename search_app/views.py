@@ -239,7 +239,7 @@ def search_gemini(request):
             
             # Generate new content if topic doesn't exist
             prompt = generate_prompt(topic_name)
-            result = call_gemini_model(prompt, model_name="gmini-2.0-flash")
+            result = call_gemini_model(prompt, model_name="gemini-2.0-flash")
             
             # Create new topic with generated content
             Topic.objects.create(name=topic_name, content=result)
