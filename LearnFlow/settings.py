@@ -117,16 +117,16 @@ DATABASES = {
     }
 }
 
-# CACHES = {
-#     "default": {
-#         "BACKEND": os.environ.get('CACHE_BACKEND'),
-#         "LOCATION": os.environ.get('CACHE_LOCATION'),
-#         "TIMEOUT": None,
-#         "OPTIONS": {
-#             "CLIENT_CLASS": os.environ.get('CACHE_CLIENT_CLASS'),
-#         }
-#     }
-# }
+CACHES = {
+    "default": {
+        "BACKEND": os.environ.get('CACHE_BACKEND'),
+        "LOCATION": os.environ.get('CACHE_LOCATION'),
+        "TIMEOUT": None,
+        "OPTIONS": {
+            "CLIENT_CLASS": os.environ.get('CACHE_CLIENT_CLASS'),
+        }
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
