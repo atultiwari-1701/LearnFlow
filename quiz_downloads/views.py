@@ -20,7 +20,7 @@ def store_quiz_download_files(request):
     
     # Get file and quiz attempt ID from POST data
     quiz_file = request.FILES.get('file')
-    quiz_attempt_id = request.POST.get('quiz_attempt_id')
+    quiz_attempt_id = int(request.POST.get('quiz_attempt_id'))
 
     if not quiz_file or not quiz_attempt_id:
         return JsonResponse({
@@ -30,30 +30,32 @@ def store_quiz_download_files(request):
     
     quiz_download, _ = QuizDownload.objects.get_or_create(quiz_attempt_id=quiz_attempt_id)
     
+    update_fields = {}
+
     # Extract the original filename and extension
     original_filename = quiz_file.name
     filename, file_extension = os.path.splitext(original_filename)
     if filename.endswith('questions'):
         file_path = f"quiz_downloads/{quiz_attempt_id}/questions/{original_filename}"
         if file_extension == '.txt':
-            quiz_download.questions_txt = file_path
+            update_fields['questions_txt'] = file_path
         elif file_extension == '.pdf':
-            quiz_download.questions_pdf = file_path
+            update_fields['questions_pdf'] = file_path
     elif filename.endswith('answer_key'):
         file_path = f"quiz_downloads/{quiz_attempt_id}/answer_key/{original_filename}"
         if file_extension == '.txt':
-            quiz_download.answers_txt = file_path
+            update_fields['answers_txt'] = file_path
         elif file_extension == '.pdf':
-            quiz_download.answers_pdf = file_path
+            update_fields['answers_pdf'] = file_path
     elif filename.endswith('attempts_and_answers'):
         file_path = f"quiz_downloads/{quiz_attempt_id}/attempts_and_answers/{original_filename}"
         if file_extension == '.txt':
-            quiz_download.user_attempt_txt = file_path
+            update_fields['user_attempt_txt'] = file_path
         elif file_extension == '.pdf':
-            quiz_download.user_attempt_pdf = file_path
+            update_fields['user_attempt_pdf'] = file_path
     elif filename.endswith('report_card'):
         file_path = f"quiz_downloads/{quiz_attempt_id}/report_card/{original_filename}"
-        quiz_download.report_pdf = file_path
+        update_fields['report_pdf'] = file_path
     else:
         return JsonResponse({
             'status': 'error',
@@ -62,14 +64,15 @@ def store_quiz_download_files(request):
 
     try:
         supabase_index = upload_file_to_supabase(quiz_file, file_path)
-        quiz_download.storage_index = supabase_index
+        if quiz_download.storage_index != supabase_index:
+            update_fields['storage_index'] = supabase_index
     except Exception as e:
         return JsonResponse({
             'status': 'error',
             'message': f'Upload failed: {str(e)}'
         }, status=500)
     
-    quiz_download.save()
+    QuizDownload.objects.filter(quiz_attempt_id=quiz_attempt_id).update(**update_fields)
 
     return JsonResponse({
         'status': 'success',

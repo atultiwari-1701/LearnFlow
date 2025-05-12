@@ -363,7 +363,7 @@ def save_quiz_attempt(request):
             }, status=404)
         
         # Create the quiz attempt
-        quiz_attempt = QuizAttempt.objects.create(
+        quiz_attempt: QuizAttempt = QuizAttempt.objects.create(
             user_id=request.session.get('user_id'),  # Assuming user_id is stored in session
             total_time_taken=data['total_time_taken'],
             correct_attempts=data['correct_attempts'],
@@ -397,6 +397,7 @@ def save_quiz_attempt(request):
         
         return JsonResponse({
             'status': 'success',
+            'quiz_attempt_id': quiz_attempt.pk,
             'message': 'Quiz attempt saved successfully'
         })
         
