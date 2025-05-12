@@ -223,10 +223,6 @@ def search_gemini(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         print("it is a post request")
         topic_name = json.loads(request.body).get('search_query', '')
-        topic_name = extract_relevant_topic_from_prompt_util(topic_name)
-        topic_name = topic_name.strip().lower()
-        if topic_name == 'not a relevant topic' or topic_name == 'not enough information' or topic_name == '':
-            return JsonResponse({'error': 'not a relevant topic or not enough information'}, status=400)
         
         print(f"topic_name: {topic_name}")
         
@@ -238,6 +234,10 @@ def search_gemini(request):
                 return JsonResponse({'result': topic.content})
             
             # Generate new content if topic doesn't exist
+            topic_name = extract_relevant_topic_from_prompt_util(topic_name)
+            topic_name = topic_name.strip().lower()
+            if topic_name == 'not a relevant topic' or topic_name == 'not enough information' or topic_name == '':
+                return JsonResponse({'error': 'not a relevant topic or not enough information'}, status=400)
             prompt = generate_prompt(topic_name)
             result = call_gemini_model(prompt, model_name="gemini-2.0-flash")
             
