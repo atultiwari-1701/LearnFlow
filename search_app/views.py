@@ -20,6 +20,32 @@ _youtube_api_key_cycle = cycle(settings.YOUTUBE_API_KEYS)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+def extract_relevant_topic_from_prompt_util(user_prompt: str) -> str:
+    """
+    Given a user prompt, use Gemini to extract the most relevant topic/subtopic for learning.
+    If the prompt is not a valid topic to learn, return 'not a relevant topic'.
+    If the prompt is too vague or lacks enough information to determine a topic/subtopic, return 'not enough information'.
+    """
+    gemini_prompt = f"""
+    You are an educational assistant. Your job is to extract the main topic or subtopic suitable for learning from the following user input:
+    "{user_prompt}"
+    Respond with ONLY the most relevant topic or subtopic name (e.g., 'Data structures and algorithms').
+    If the input does not contain a valid topic to learn (e.g., random text, greetings, or non-educational queries), respond with exactly: not a relevant topic
+    If the input is too vague or does not provide enough information to determine a topic or subtopic (e.g., 'Unit 6 application'), respond with exactly: not enough information
+    Do not generate explanations, content, or quiz questions. Do not rephrase the input. Only output the topic name, 'not a relevant topic', or 'not enough information'.
+    """
+    try:
+        gemini_response = call_gemini_model(gemini_prompt, model_name = "gemini-2.0-flash", temperature=0.2, max_output_tokens=32, response_mime_type="text/plain")
+        response_text = gemini_response.strip().strip('"\'')  # Remove quotes if present
+        if response_text.lower() == 'not a relevant topic':
+            return 'not a relevant topic'
+        if response_text.lower() == 'not enough information':
+            return 'not enough information'
+        return response_text
+    except Exception as e:
+        logger.error(f"Error extracting topic from prompt: {e}")
+        return 'not a relevant topic'
+
 def call_gemini_model(prompt, model_name="gemini-2.0-pro-exp-02-05", temperature=1, top_p=0.95, top_k=64, max_output_tokens=8192, response_mime_type="application/json"):
     """
     Calls the Gemini model with the given prompt and configuration.
@@ -197,6 +223,11 @@ def search_gemini(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         print("it is a post request")
         topic_name = json.loads(request.body).get('search_query', '')
+        topic_name = extract_relevant_topic_from_prompt_util(topic_name)
+        topic_name = topic_name.strip().lower()
+        if topic_name == 'not a relevant topic' or topic_name == 'not enough information' or topic_name == '':
+            return JsonResponse({'error': 'not a relevant topic or not enough information'}, status=400)
+        
         print(f"topic_name: {topic_name}")
         
         try:
@@ -208,7 +239,7 @@ def search_gemini(request):
             
             # Generate new content if topic doesn't exist
             prompt = generate_prompt(topic_name)
-            result = call_gemini_model(prompt)
+            result = call_gemini_model(prompt, model_name="gmini-2.0-flash")
             
             # Create new topic with generated content
             Topic.objects.create(name=topic_name, content=result)
@@ -294,7 +325,7 @@ def generate_quiz(request):
                 
                 Return the quiz in JSON format with a "quiz" key containing an array of questions.
             """
-            response_text = call_gemini_model(prompt)
+            response_text = call_gemini_model(prompt, model_name="gemini-2.0-flash")
             quiz_data = eval(response_text)
             # Store new questions in database and collect their IDs
             final_questions = []
